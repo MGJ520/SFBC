@@ -1,0 +1,17 @@
+{
+    "C_Cpp.errorSquiggles": "disabled",
+    "editor.definitionLinkOpensInPeek": true,
+    "editor.columnSelection": false,
+    "files.associations": {
+        "M2_BAT_BN_BEEP.C": "cpp",
+        "onebutton.h": "c",
+        "simplefoc.h": "c",
+        "array": "cpp",
+        "string": "cpp",
+        "string_view": "cpp"
+    },
+    "cody.autocomplete.experimental.ollamaOptions": {
+        "url": "http://127.0.0.1:11434",
+        "model": "Malicus7862/deepseekcoder-6.7b-jarvis-gguf:latest"
+    }
+}
