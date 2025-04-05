@@ -57,7 +57,7 @@ void balanceCarPowerOn() {
 void balanceCarPowerOff() {
     if (battery_low == 0) {
         // 播放关机音效
-        buzzer.play(powerOffID);
+       // buzzer.play(powerOffID);
         battery_low = 1;
     }
 
@@ -111,7 +111,7 @@ void ButtonEventTask(void *pvParameters) {
         bnt.tick();
 
         // 任务延时50ms
-        vTaskDelay(50);
+        vTaskDelay(20);
     }
 };
 

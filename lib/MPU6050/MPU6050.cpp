@@ -84,7 +84,7 @@ void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delay
     }
 
     // 采集3000次样本求平均
-    for (int i = 0; i < 3000; i++) {
+    for (int i = 0; i < 1000; i++) {
         if (console && i % 1000 == 0) Serial.print(".");
 
         // 读取陀螺仪原始数据（寄存器0x43开始，6字节）
@@ -105,9 +105,9 @@ void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delay
     }
 
     // 计算平均偏移量（X轴特殊处理-5.0）
-    gyroXoffset = x / 3000 - 5.0f;
-    gyroYoffset = y / 3000;
-    gyroZoffset = z / 3000;
+    gyroXoffset = x / 1000 - 5.0f;
+    gyroYoffset = y / 1000;
+    gyroZoffset = z / 1000;
 
     if (console) {  // 输出结果
         Serial.println("\nDone!");
