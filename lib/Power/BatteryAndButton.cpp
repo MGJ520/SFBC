@@ -129,6 +129,14 @@ void BatteryVoltageCheckTask(void *pvParameters) {
 
 
 boolean PWR_AND_BNT::init(void) {
+    pinMode(PWM_MPU_GPIO, OUTPUT);
+    digitalWrite(PWM_MPU_GPIO, LOW);
+
+    pinMode(LED_2_GPIO, OUTPUT);
+    digitalWrite(LED_2_GPIO, HIGH);
+
+
+
     // 设置电池电压检测引脚为输入模式
     pinMode(BAT_ADC_PIN, INPUT);
 

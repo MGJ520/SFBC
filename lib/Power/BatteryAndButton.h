@@ -4,10 +4,10 @@
 #include <Arduino.h>
 
 // ----------------------
-#define BUTTON_PIN     6         // 按键引脚
-#define BUZZER_PIN     40        // 蜂鸣器引脚
-#define POWEREN_PIN    7         // 电源引脚
-#define BAT_ADC_PIN    1         // 电源电压引脚
+#define BUTTON_PIN     BUTTON_DIS_GPIO         // 按键引脚
+#define BUZZER_PIN     BEEP_GPIO        // 蜂鸣器引脚
+#define POWEREN_PIN    PWR_EN_GPIO        // 电源引脚
+#define BAT_ADC_PIN    BAT_ADC_GPIO         // 电源电压引脚
 
 //#define voltage_3v3    3.28   // 3.3V供电校准
 //#define resistance_fix (0.51)  //电阻值修正
