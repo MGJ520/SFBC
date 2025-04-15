@@ -8,6 +8,7 @@
 #include "SimpleKalmanFilter.h"
 #include "MPU6050.h"
 
+
 MagneticSensorI2C sensor_A = MagneticSensorI2C(AS5600_I2C); // 磁传感器A
 MagneticSensorI2C sensor_B = MagneticSensorI2C(AS5600_I2C); // 磁传感器B
 
@@ -160,9 +161,9 @@ void Task2code(void *pvParameters) {
     cs_B.gain_c *= -1;
 
     motor_B.linkCurrentSense(&cs_B);
-    motor_B.initFOC();
-    buzzer.play(S_SIREN);
     mpu6050.calcGyroOffsets();
+    motor_B.initFOC();
+    //buzzer.play(S_SIREN);
     vTaskDelete(Task2);
 }
 
@@ -198,7 +199,6 @@ void setup() {
 
 
     command.add('T', onTarget, "target velocity");
-
 }
 
 // 定义速度限制参数
@@ -271,9 +271,11 @@ void loop() {
 
         //============================保护=================================
         // 渐进式扭矩衰减
-        if (Now_Speed > MAX_ALLOWED_SPEED) {
-            balanceCarPowerOff();
-        }
+
+//        if (Now_Speed > MAX_ALLOWED_SPEED) {
+//            balanceCarPowerOff();
+//        }
+
         // 如果速度超过限制，则降低力矩
         if (abs(motor_A.shaft_velocity) > 60) {
             Target_torque_A = 0;
@@ -281,8 +283,10 @@ void loop() {
         }
 
         //暂时显示A
+
         //motor_A.monitor();
         //motor_B.monitor();
+
         command.run();
     }
 

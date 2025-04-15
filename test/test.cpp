@@ -1,4 +1,3 @@
-#include "XboxVibrationLibrary.h"
 
 XboxVibration vibration; // 创建震动库对象
 

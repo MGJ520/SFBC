@@ -89,14 +89,14 @@ void CheckBatteryVoltageForSafety() {
 
 
     if (batteryVoltage_raw < 2000) {
-//        Serial.print("\n[电池]:原始数据: ");
-//        Serial.println(batteryVoltage_raw);
-//        Serial.print("[电池]:计算ADC电压: ");
-//        Serial.println(adc_voltage_out);
-//        Serial.print("[电池]:计算VCC电压: ");
-//        Serial.println(vcc_voltage_out);
-//        Serial.print("[电池]:计算电池电量: ");
-//        Serial.println(battery_percent);
+        Serial.print("\n[电池]:原始数据: ");
+        Serial.println(batteryVoltage_raw);
+        Serial.print("[电池]:计算ADC电压: ");
+        Serial.println(adc_voltage_out);
+        Serial.print("[电池]:计算VCC电压: ");
+        Serial.println(vcc_voltage_out);
+        Serial.print("[电池]:计算电池电量: ");
+        Serial.println(battery_percent);
         Serial.println("[电池-动作]:触发保护模式,过载或电池电压低");
         BatteryVoltageNotSafety();
     }
