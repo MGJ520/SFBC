@@ -84,10 +84,10 @@ void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delay
     }
 
     // 采集3000次样本求平均
-    for (int i = 0; i < 3000; i++) {
+    for (int i = 0; i < 4000; i++) {
         if (console && i % 1000 == 0) Serial.print(".");
 
-        // 读取陀螺仪原始数据（寄存器0x43开始，6字节）
+        // 读取陀螺仪原始数据（寄存器0x43开始，6个字节）
         wire->beginTransmission(MPU6050_ADDR);
         wire->write(0x43);
         wire->endTransmission(false);
@@ -105,9 +105,9 @@ void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delay
     }
 
     // 计算平均偏移量（X轴特殊处理-5.0）
-    gyroXoffset = x / 3000 - 5.0f;
-    gyroYoffset = y / 3000;
-    gyroZoffset = z / 3000;
+    gyroXoffset = x / 4000 - 5.0f;
+    gyroYoffset = y / 4000;
+    gyroZoffset = z / 4000;
 
     if (console) {  // 输出结果
         Serial.println("\nDone!");
@@ -122,13 +122,13 @@ void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delay
 
 // 主更新函数：读取传感器数据并计算角度
 void MPU6050::update() {
-    // 从寄存器0x3B开始读取14字节（加速度+温度+陀螺仪）
+    // 从寄存器0x3B开始读取14个字节（加速度+温度+陀螺仪）
     wire->beginTransmission(MPU6050_ADDR);
     wire->write(0x3B);
     wire->endTransmission(false);
     wire->requestFrom((int)MPU6050_ADDR, 14);
 
-    // 解析加速度计原始数据（每个轴2字节）
+    // 解析加速度计原始数据（每个轴2个字节）
     rawAccX = wire->read() << 8 | wire->read();
     rawAccY = wire->read() << 8 | wire->read();
     rawAccZ = wire->read() << 8 | wire->read();

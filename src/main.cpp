@@ -172,31 +172,29 @@ void setup() {
     SetupCarSystem();
     //按键任务
     PowerAndButton.startTask();
+
     //I2C
     I2C_A.begin(37, 36, 400000UL);
     I2C_B.begin(8, 9, 400000UL);
+
+    //MPU初始化
     mpu6050.begin();
 
-
-// 创建任务1，并将其固定到核心0
-    xTaskCreatePinnedToCore(
-            Task1code,   // Task function. 任务函数，即任务的具体执行代码，这里是Task1code函数
-            "Task1",     // name of task. 任务的名称，用于调试和日志记录，这里是"Task1"
-            10000,       // Stack size of task. 任务的堆栈大小，单位是字节，这里是10000字节
-            NULL,        // parameter of the task. 传递给任务函数的参数，这里是NULL，表示没有参数
-            3,           // priority of the task. 任务的优先级，数字越大优先级越高，这里是3
-            &Task1,      // Task handle to keep track of created task. 任务句柄，用于后续操作任务，这里是Task1
-            1);          // pin task to core 0. 将任务固定到特定的核心，这里是核心0
-
-// 创建任务2，并将其固定到核心1
-    xTaskCreatePinnedToCore(
-            Task2code,   // Task function. 任务函数，即任务的具体执行代码，这里是Task2code函数
-            "Task2",     // name of task. 任务的名称，用于调试和日志记录，这里是"Task2"
-            10000,       // Stack size of task. 任务的堆栈大小，单位是字节，这里是10000字节
-            NULL,        // parameter of the task. 传递给任务函数的参数，这里是NULL，表示没有参数
-            2,           // priority of the task. 任务的优先级，数字越大优先级越高，这里是2
-            &Task2,      // Task handle to keep track of created task. 任务句柄，用于后续操作任务，这里是Task2
-            1);          // pin task to core 1. 将任务固定到特定的核心，这里是核心1
+    //创建任务
+    xTaskCreatePinnedToCore(Task1code,
+                            "Task1",
+                            10000,
+                            NULL,
+                            3,
+                            &Task1,
+                            0);
+    xTaskCreatePinnedToCore(Task2code,
+                            "Task2",
+                            10000,
+                            NULL,
+                            2,
+                            &Task2,
+                            1);
 
 
     command.add('T', onTarget, "target velocity");
@@ -207,7 +205,6 @@ void setup() {
 const float MAX_ALLOWED_SPEED = 150.0f;
 
 int speed_count=5;
-
 
 
 //传感器参数
@@ -230,14 +227,11 @@ void loop() {
     while (motor_A.motor_status == motor_ready && motor_B.motor_status == motor_ready) {
         speed_count++;
 
-
         //===============================FOC控制==============================
         motor_A.loopFOC();
         motor_B.loopFOC();
         motor_A.move(Target_torque_A);
         motor_B.move(Target_torque_B);
-
-
 
         //===============================传感器==============================
 
