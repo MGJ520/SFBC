@@ -92,7 +92,7 @@ public:
         return gyroZ;
     };
 
-    void calcGyroOffsets(bool console = false, uint16_t delayBefore = 1000, uint16_t delayAfter = 800);
+    void calcGyroOffsets(bool console = false, uint16_t delayBefore = 500, uint16_t delayAfter = 500);
 
     float getGyroXoffset()
     {

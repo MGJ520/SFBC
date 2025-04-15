@@ -56,7 +56,6 @@ TaskHandle_t Task2;
 float Offset_parameters = 3.5f; //偏置参数
 
 
-
 Commander command = Commander(Serial);
 
 void onTarget(char *cmd) {
@@ -162,7 +161,6 @@ void Task2code(void *pvParameters) {
 
     motor_B.linkCurrentSense(&cs_B);
     motor_B.initFOC();
-
     buzzer.play(S_SIREN);
     mpu6050.calcGyroOffsets();
     vTaskDelete(Task2);
@@ -177,7 +175,6 @@ void setup() {
     //I2C
     I2C_A.begin(37, 36, 400000UL);
     I2C_B.begin(8, 9, 400000UL);
-
     mpu6050.begin();
 
 
