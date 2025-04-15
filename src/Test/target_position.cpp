@@ -1,61 +1,75 @@
 //#include <Arduino.h>
-//#include "SimpleFOC.h"
-//#include "BatteryAndButton.h"
-//#include "./Pre_System/Pre_System.h"
-//
-//#include "FocDriver.h"
+//#include <Wire.h>
 //
 //
-//BLDCMotor motor = BLDCMotor(7);
+//// MPU6050的I2C地址（AD0引脚接地时为0x68，接高电平为0x69）
+//const int MPU_ADDR = 0x68;
 //
-//#define  A 0
-//#if A
-//BLDCDriver3PWM driver = BLDCDriver3PWM(35, 13, 14);
-//#else
-//BLDCDriver3PWM driver = BLDCDriver3PWM(12, 11, 10);
-//#endif
-//// 目标变量
-//float target_position = 0;
+//// 定义ESP32-S3的I2C引脚
+//const int SDA_PIN = SDA_A_GPIO;
+//const int SCL_PIN = SCL_A_GPIO;
 //
-//// commander实例化
-//Commander command = Commander(Serial);
-//void doTarget(char* cmd) { command.scalar(&motor.target, cmd); }
+//// 加速度和陀螺仪的原始数据变量
+//int16_t accX, accY, accZ, gyroX, gyroY, gyroZ;
 //
 //void setup() {
-//    //初始化系统
-//    SetupCarSystem();
-//    // 开启按键与电压检测任务
-//    PowerAndButton.startTask();
-//    // 配置驱动器
-//    // 电源电压 [V]
-//    driver.voltage_power_supply = 8;
-//    driver.init();
+//    // 初始化I2C通信（指定SDA和SCL引脚）
+//    Serial.begin(115200);
+//    Wire.begin(SDA_PIN, SCL_PIN);
 //
-//    // 连接电机和驱动器
-//    motor.linkDriver(&driver);
-//    motor.voltage_limit = 0.4;   // [V] - 如果相电阻没有定义
 //
-//    // 配置开环控制
-//    motor.controller = MotionControlType::angle_openloop;
+//    // 唤醒MPU6050
+//    Wire.beginTransmission(MPU_ADDR);
+//    Wire.write(0x6B);      // 电源管理寄存器
+//    Wire.write(0x00);      // 退出睡眠模式
+//    Wire.endTransmission(true);
 //
-//    // 初始化电机
-//    motor.init();
+//    // 配置加速度计 ±2g
+//    Wire.beginTransmission(MPU_ADDR);
+//    Wire.write(0x1C);      // 加速度配置寄存器
+//    Wire.write(0x00);      // ±2g（16384 LSB/g）
+//    Wire.endTransmission(true);
 //
-//    // 添加目标命令T
-//    command.add('T', doTarget, "target velocity");
-//
-//    Serial.println("Motor ready!");
-//    Serial.println("Set target velocity [rad/s]");
-//
-//    _delay(1000);
+//    // 配置陀螺仪 ±250度/秒
+//    Wire.beginTransmission(MPU_ADDR);
+//    Wire.write(0x1B);      // 陀螺仪配置寄存器
+//    Wire.write(0x00);      // ±250度/秒（131 LSB/度/秒）
+//    Wire.endTransmission(true);
 //}
 //
-//
 //void loop() {
-//    motor.move(motor.target);
+//    // 请求读取传感器数据
+//    Wire.beginTransmission(MPU_ADDR);
+//    Wire.write(0x3B);      // 起始寄存器地址：加速度X高字节
+//    Wire.endTransmission(false);
+//    Wire.requestFrom(MPU_ADDR, 14, true);
 //
-//    motor.monitor();
+//    // 解析原始数据（注意顺序）
+//    accX = Wire.read() << 8 | Wire.read(); // 加速度X
+//    accY = Wire.read() << 8 | Wire.read(); // 加速度Y
+//    accZ = Wire.read() << 8 | Wire.read(); // 加速度Z
+//    int16_t temp = Wire.read() << 8 | Wire.read(); // 温度（未处理）
+//    gyroX = Wire.read() << 8 | Wire.read(); // 陀螺仪X
+//    gyroY = Wire.read() << 8 | Wire.read(); // 陀螺仪Y
+//    gyroZ = Wire.read() << 8 | Wire.read(); // 陀螺仪Z
 //
-//    command.run();
+//    // 转换为实际单位
+//    float acc_scale = 16384.0;  // ±2g灵敏度
+//    float gyro_scale = 131.0;   // ±250度/秒灵敏度
 //
+//    Serial.print("加速度 [g]: X=");
+//    Serial.print(accX / acc_scale, 2);  // 保留两位小数
+//    Serial.print(", Y=");
+//    Serial.print(accY / acc_scale, 2);
+//    Serial.print(", Z=");
+//    Serial.print(accZ / acc_scale, 2);
+//
+//    Serial.print(" | 陀螺仪 [度/秒]: X=");
+//    Serial.print(gyroX / gyro_scale, 2);
+//    Serial.print(", Y=");
+//    Serial.print(gyroY / gyro_scale, 2);
+//    Serial.print(", Z=");
+//    Serial.println(gyroZ / gyro_scale, 2);
+//
+//    delay(100); // 适当降低延时提高数据刷新率
 //}

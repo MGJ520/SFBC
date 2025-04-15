@@ -235,7 +235,8 @@ uint16_t IRAM_ATTR adcRead(uint8_t pin)
 
     uint16_t value = 0;
 
-    if(channel > 7){
+    //修改7
+    if(channel > 9){
         while (GET_PERI_REG_MASK(SENS_SAR_MEAS2_CTRL2_REG, SENS_MEAS2_DONE_SAR) == 0); //wait for conversion
         value = GET_PERI_REG_BITS2(SENS_SAR_MEAS2_CTRL2_REG, SENS_MEAS2_DATA_SAR, SENS_MEAS2_DATA_SAR_S);
     } else {

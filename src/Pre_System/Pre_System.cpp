@@ -27,6 +27,8 @@ void SetupCarSystem() {
 
     // 检查电池模块是否初始化成功
     LogInitialization("电池模块", PowerAndButton.init());
+
+
     // 检查驱动模块是否初始化成功
     //LogInitialization("驱动模块", BalanceDriver.init());
 

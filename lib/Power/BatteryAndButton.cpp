@@ -5,6 +5,9 @@
 // 定义一个OneButton对象，用于处理按钮事件，绑定到BUTTON_PIN引脚，并启用消抖功能
 OneButton bnt(BUTTON_PIN, true);
 
+#ifdef BUTTON_WIFI_GPIO
+OneButton bnt_wifi(BUTTON_WIFI_GPIO, true);
+#endif
 // 定义一个变量用于存储电池电压值
 uint16_t batteryVoltage_raw = 0;
 
@@ -109,7 +112,9 @@ void ButtonEventTask(void *pvParameters) {
     for (;;) {
         // 调用按钮对象的tick函数，处理按钮事件
         bnt.tick();
-
+#ifdef BUTTON_WIFI_GPIO
+        bnt_wifi.tick();
+#endif
         // 任务延时50ms
         vTaskDelay(20);
     }
@@ -129,11 +134,18 @@ void BatteryVoltageCheckTask(void *pvParameters) {
 
 
 boolean PWR_AND_BNT::init(void) {
+
+#ifdef PWM_MPU_GPIO
     pinMode(PWM_MPU_GPIO, OUTPUT);
     digitalWrite(PWM_MPU_GPIO, LOW);
+#endif
 
+
+#ifdef LED_2_GPIO
     pinMode(LED_2_GPIO, OUTPUT);
     digitalWrite(LED_2_GPIO, HIGH);
+#endif
+
 
 
 
@@ -157,6 +169,10 @@ boolean PWR_AND_BNT::init(void) {
 
     // 重置按钮对象的状态
     bnt.reset();
+#ifdef BUTTON_WIFI_GPIO
+    bnt_wifi.reset();
+#endif
+
 
     // 为按钮绑定长按事件
     // bnt.attachLongPressStart(balanceCarPowerOff);
@@ -196,7 +212,7 @@ boolean PWR_AND_BNT::init(void) {
 
 
 void PWR_AND_BNT::startTask() {
-    xTaskCreatePinnedToCore(ButtonEventTask, "Button_Event", 2048, NULL, 2, NULL, 0);
+    xTaskCreatePinnedToCore(ButtonEventTask, "Button_Event", 2048, NULL, 2, NULL, 1);
     xTaskCreatePinnedToCore(BatteryVoltageCheckTask, "Battery_Voltage_Check", 2048, NULL, 10, NULL, 1);
 }
 

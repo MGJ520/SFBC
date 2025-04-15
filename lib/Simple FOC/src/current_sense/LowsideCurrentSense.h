@@ -60,12 +60,16 @@ public:
     float offset_ib; //!< B 相零电流时的电压值（ADC 读数的中心值）
     float offset_ic; //!< C 相零电流时的电压值（ADC 读数的中心值）
 
+    int   cs_num=1;
+    int pinC;
+    int pinB;
+// 硬件相关变量
+int pinA;
 private:
 
-    // 硬件相关变量
-    int pinA; //!< 用于电流测量的 A 相模拟引脚
-    int pinB; //!< 用于电流测量的 B 相模拟引脚
-    int pinC; //!< 用于电流测量的 C 相模拟引脚
+    //!< 用于电流测量的 A 相模拟引脚
+    //!< 用于电流测量的 B 相模拟引脚
+    //!< 用于电流测量的 C 相模拟引脚
 
     // 增益相关变量
     float shunt_resistor; //!< 采样电阻的阻值

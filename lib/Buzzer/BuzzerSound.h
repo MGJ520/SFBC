@@ -25,7 +25,8 @@
 #define S_JUMP 20
 #define S_BEEP 21
 #define S_SIREN 22
-
+#define TINY_WORLD 23
+#define TRUE_GOODNESS_WORLD 24
 // ---
 #define debug true
 

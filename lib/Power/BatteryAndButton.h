@@ -13,8 +13,8 @@
 //#define resistance_fix (0.51)  //电阻值修正
 
 
-#define voltage_3v3    3.295   // 3.3V供电校准
-#define resistance_fix (0.45)  //电阻值修正
+#define voltage_3v3    3.259   // 3.3V供电校准
+#define resistance_fix (0.53)  //电阻值修正
 
 
 #define resistance_vcc 20     // 电阻值K（VCC端）

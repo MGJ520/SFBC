@@ -3,6 +3,8 @@
 
 #include "Arduino.h"
 #include "Wire.h"
+#include <Preferences.h>  // 引入Preferences库，用于操作NVS
+
 
 #define MPU6050_ADDR 0x68
 #define MPU6050_SMPLRT_DIV 0x19

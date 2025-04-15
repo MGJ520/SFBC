@@ -4,8 +4,7 @@
 #include "UserConfig.h"  // 用户自定义配置（如滤波器系数）
 
 // 构造函数1：使用UserConfig.h中的默认系数初始化
-MPU6050::MPU6050(TwoWire &w)
-{
+MPU6050::MPU6050(TwoWire &w) {
     wire = &w;  // 保存Wire对象指针用于I2C通信
     // 从UserConfig.h加载滤波器系数
     gyroCoef = GYRO_COEF;       // 陀螺仪主系数（默认0.975）
@@ -15,8 +14,7 @@ MPU6050::MPU6050(TwoWire &w)
 }
 
 // 构造函数2：允许自定义滤波器系数
-MPU6050::MPU6050(TwoWire &w, float aC, float gC, float gCX)
-{
+MPU6050::MPU6050(TwoWire &w, float aC, float gC, float gCX) {
     wire = &w;
     accCoef = aC;    // 自定义加速度计系数
     gyroCoef = gC;   // 自定义陀螺仪主系数
@@ -24,8 +22,7 @@ MPU6050::MPU6050(TwoWire &w, float aC, float gC, float gCX)
 }
 
 // 初始化MPU6050传感器
-void MPU6050::begin()
-{
+void MPU6050::begin() {
     // 配置MPU6050寄存器
     writeMPU6050(MPU6050_SMPLRT_DIV, 0x00);   // 采样率分频器（默认1kHz）
     writeMPU6050(MPU6050_CONFIG, 0x00);       // 禁用低通滤波器
@@ -70,54 +67,70 @@ void MPU6050::setGyroOffsets(float x, float y, float z) {
 }
 
 // 自动计算陀螺仪偏移（需保持传感器静止）
-void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delayAfter)
-{
-    float x = 0, y = 0, z = 0;
-    int16_t rx, ry, rz;
+void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delayAfter) {
+    float calc_time = 20000;
+    Preferences preferences;  // 创建Preferences对象
+    // 打开Preferences，指定命名空间为"counterStorage"
+    preferences.begin("MPU_GyroOffsets", false);
 
-    delay(delayBefore);  // 校准前等待时间
+    // 读取计数器
+    if (preferences.getInt("new", -1) != 3) {
 
-    if (console) {  // 串口提示信息
-        Serial.println("\n========================================");
-        Serial.println("Calculating gyro offsets");
-        Serial.print("DO NOT MOVE MPU6050");
-    }
+#ifdef LED_3_GPIO
+        pinMode(LED_3_GPIO, OUTPUT);
+        digitalWrite(LED_3_GPIO, HIGH);
+#endif
+        preferences.putInt("new", 3);  // 将新的计数值写入NVS
+        delay(delayBefore);  // 校准前等待时间
+        float x = 0, y = 0, z = 0;
+        int16_t rx, ry, rz;
 
-    // 采集3000次样本求平均
-    for (int i = 0; i < 4000; i++) {
-        if (console && i % 1000 == 0) Serial.print(".");
+        // 采集3000次样本求平均
+        for (int i = 0; i < (int) calc_time; i++) {
+            if (console && i % 1000 == 0) Serial.print(".");
+            // 读取陀螺仪原始数据（寄存器0x43开始，6个字节）
+            wire->beginTransmission(MPU6050_ADDR);
+            wire->write(0x43);
+            wire->endTransmission(false);
+            wire->requestFrom((int) MPU6050_ADDR, 6);
 
-        // 读取陀螺仪原始数据（寄存器0x43开始，6个字节）
-        wire->beginTransmission(MPU6050_ADDR);
-        wire->write(0x43);
-        wire->endTransmission(false);
-        wire->requestFrom((int)MPU6050_ADDR, 6);
+            // 解析XYZ三轴数据（注意数据顺序）
+            rx = wire->read() << 8 | wire->read();
+            ry = wire->read() << 8 | wire->read();
+            rz = wire->read() << 8 | wire->read();
 
-        // 解析XYZ三轴数据（注意数据顺序）
-        rx = wire->read() << 8 | wire->read();
-        ry = wire->read() << 8 | wire->read();
-        rz = wire->read() << 8 | wire->read();
+            // 转换为度/秒并累加（65.5 = 500dps量程的LSB转换系数）
+            x += ((float) rx) / 65.5;
+            y += ((float) ry) / 65.5;
+            z += ((float) rz) / 65.5;
+        }
 
-        // 转换为度/秒并累加（65.5 = 500dps量程的LSB转换系数）
-        x += ((float)rx) / 65.5;
-        y += ((float)ry) / 65.5;
-        z += ((float)rz) / 65.5;
-    }
+        // 计算平均偏移量（X轴特殊处理-5.0）
+        gyroXoffset = x / calc_time - 5.0f;
+        gyroYoffset = y / calc_time;
+        gyroZoffset = z / calc_time;
 
-    // 计算平均偏移量（X轴特殊处理-5.0）
-    gyroXoffset = x / 4000 - 5.0f;
-    gyroYoffset = y / 4000;
-    gyroZoffset = z / 4000;
 
-    if (console) {  // 输出结果
         Serial.println("\nDone!");
         Serial.println("X : " + String(gyroXoffset));
         Serial.println("Y : " + String(gyroYoffset));
         Serial.println("Z : " + String(gyroZoffset));
-        Serial.println("Program will start after 3 seconds");
-        Serial.println("========================================");
+        preferences.putFloat("gyroXoffset", gyroXoffset);  // 将新的计数值写入NVS
+        preferences.putFloat("gyroYoffset", gyroYoffset);  // 将新的计数值写入NVS
+        preferences.putFloat("gyroZoffset", gyroZoffset);  // 将新的计数值写入NVS
         delay(delayAfter);  // 校准后等待时间
+#ifdef LED_3_GPIO
+        digitalWrite(LED_3_GPIO, LOW);
+#endif
+    } else {
+        gyroXoffset=preferences.getFloat("gyroXoffset", gyroXoffset);  // 将新的计数值写入NVS
+        gyroYoffset=preferences.getFloat("gyroYoffset", gyroYoffset);  // 将新的计数值写入NVS
+        gyroZoffset=preferences.getFloat("gyroZoffset", gyroZoffset);  // 将新的计数值写入NVS
     }
+
+    // 关闭Preferences
+    preferences.end();
+
 }
 
 // 主更新函数：读取传感器数据并计算角度
@@ -126,7 +139,7 @@ void MPU6050::update() {
     wire->beginTransmission(MPU6050_ADDR);
     wire->write(0x3B);
     wire->endTransmission(false);
-    wire->requestFrom((int)MPU6050_ADDR, 14);
+    wire->requestFrom((int) MPU6050_ADDR, 14);
 
     // 解析加速度计原始数据（每个轴2个字节）
     rawAccX = wire->read() << 8 | wire->read();
@@ -140,9 +153,9 @@ void MPU6050::update() {
     rawGyroZ = wire->read() << 8 | wire->read();
 
     // 转换加速度数据到g单位（16384 = ±2g量程的LSB转换系数）
-    accX = ((float)rawAccX) / 16384.0;
-    accY = ((float)rawAccY) / 16384.0;
-    accZ = ((float)rawAccZ) / 16384.0;
+    accX = ((float) rawAccX) / 16384.0;
+    accY = ((float) rawAccY) / 16384.0;
+    accZ = ((float) rawAccZ) / 16384.0;
 
     // 通过加速度计计算X轴倾斜角（单位：度）
     // 公式解释：atan2(accY, accZ)计算绕X轴旋转角度
@@ -150,8 +163,8 @@ void MPU6050::update() {
     angleAccX = atan2(accY, accZ + abs(accX)) * 360 / (2.0 * PI);
 
     // 转换陀螺仪数据到度/秒（65.5 = ±500dps量程的LSB转换系数）
-    gyroX = ((float)rawGyroX) / 65.5;
-    gyroZ = ((float)rawGyroZ) / 65.5;
+    gyroX = ((float) rawGyroX) / 65.5;
+    gyroZ = ((float) rawGyroZ) / 65.5;
 
     // 应用陀螺仪偏移校准
     gyroX -= gyroXoffset;

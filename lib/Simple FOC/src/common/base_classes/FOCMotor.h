@@ -153,7 +153,7 @@ class FOCMotor
     float feed_forward_velocity = 0.0f; //!< 当前前馈速度
     float shaft_angle;       //!< 当前电机的机械角度
     float electrical_angle;  //!< 当前电机的电角度
-    float shaft_velocity;    //!< 当前电机的速度
+    float shaft_velocity;    //!< 当前电机的速度rad/s
     float current_sp;        //!< 目标电流（q轴电流）
     float shaft_velocity_sp; //!< 当前目标速度
     float shaft_angle_sp;    //!< 当前目标角度

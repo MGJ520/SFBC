@@ -104,11 +104,11 @@ void BLDCMotor::init() {
         sensor_direction = Direction::CW; // 设置传感器方向为顺时针
     }
 
-    _delay(500); // 延时500毫秒
+    _delay(200); // 延时500毫秒
     // 启动电机
     SIMPLEFOC_DEBUG("MOT: Enable driver."); // 调试信息：启用驱动器
     enable(); // 启用电机驱动器
-    _delay(500); // 延时500毫秒
+    _delay(200); // 延时500毫秒
     motor_status = FOCMotorStatus::motor_uncalibrated; // 设置电机状态为未校准
 }
 
@@ -144,7 +144,7 @@ int BLDCMotor::initFOC() {
     // 如果需要，则对电机进行对齐
     // 对于编码器，对齐是必要的！
     // 传感器和电机对齐 - 可以通过设置 motor.sensor_direction 和 motor.zero_electric_angle 来跳过
-    _delay(500); // 延时 500 毫秒
+    _delay(200); // 延时 500 毫秒
     if (sensor) { // 如果有传感器
         exit_flag *= alignSensor(); // 调用 alignSensor 函数进行传感器对齐，并将返回值与 exit_flag 相乘
         // 添加了转轴角度更新
@@ -158,7 +158,7 @@ int BLDCMotor::initFOC() {
     // 对电流传感器进行对齐 - 可以跳过
     // 检查驱动器相位是否与电流检测相位一致
     // 并检查测量方向
-    _delay(500); // 延时 500 毫秒
+    _delay(200); // 延时 500 毫秒
     if (exit_flag) { // 如果之前的对齐操作成功
         if (current_sense) { // 如果有电流检测
             if (!current_sense->initialized) { // 如果电流检测未初始化

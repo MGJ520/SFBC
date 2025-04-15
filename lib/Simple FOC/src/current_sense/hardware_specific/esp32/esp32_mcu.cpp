@@ -105,60 +105,66 @@ void* _configureADCLowSide(const void* driver_params, const int pinA,const int p
 
 
 void _driverSyncLowSide(void* driver_params, void* cs_params){
+    // 获取mcpwm设备指针
+    mcpwm_dev_t* mcpwm_dev = ((ESP32MCPWMDriverParams*)driver_params)->mcpwm_dev;
+    // 获取mcpwm单元
+    mcpwm_unit_t mcpwm_unit = ((ESP32MCPWMDriverParams*)driver_params)->mcpwm_unit;
 
-  mcpwm_dev_t* mcpwm_dev = ((ESP32MCPWMDriverParams*)driver_params)->mcpwm_dev;
-  mcpwm_unit_t mcpwm_unit = ((ESP32MCPWMDriverParams*)driver_params)->mcpwm_unit;
+    // 使能低侧寄存器中断（使能PWM定时器0的TEP事件中断）
+    mcpwm_dev->int_ena.timer0_tep_int_ena = true;//A PWM timer 0 TEP event will trigger this interrupt
 
-  // low-side register enable interrupt
-  mcpwm_dev->int_ena.timer0_tep_int_ena = true;//A PWM timer 0 TEP event will trigger this interrupt
-  // high side registers enable interrupt 
-  //mcpwm_dev->int_ena.timer0_tep_int_ena = true;//A PWM timer 0 TEZ event will trigger this interrupt 
+    // 高侧寄存器中断使能（注释掉了，若需要可取消注释）
+    // mcpwm_dev->int_ena.timer0_tep_int_ena = true;//A PWM timer 0 TEZ event will trigger this interrupt
 
-  // register interrupts (mcpwm number, interrupt handler, handler argument = NULL, interrupt signal/flag, return handler = NULL)
-  if(mcpwm_unit == MCPWM_UNIT_0)
-    mcpwm_isr_register(mcpwm_unit, mcpwm0_isr_handler, NULL, ESP_INTR_FLAG_IRAM, NULL);  //Set ISR Handler
-  else
-    mcpwm_isr_register(mcpwm_unit, mcpwm1_isr_handler, NULL, ESP_INTR_FLAG_IRAM, NULL);  //Set ISR Handler
+    // 注册中断（mcpwm编号，中断处理函数，处理函数参数 = NULL，中断信号/标志，返回处理函数 = NULL）
+    if(mcpwm_unit == MCPWM_UNIT_0)
+    {
+        mcpwm_isr_register(mcpwm_unit, mcpwm0_isr_handler, NULL, ESP_INTR_FLAG_IRAM, NULL);  //Set ISR Handler
+
+    }
+     else
+        mcpwm_isr_register(mcpwm_unit, mcpwm1_isr_handler, NULL, ESP_INTR_FLAG_IRAM, NULL);  //Set ISR Handler
 }
-
 static void IRAM_ATTR mcpwm0_isr_handler(void*) __attribute__ ((unused));
 
-// Read currents when interrupt is triggered
-static void IRAM_ATTR mcpwm0_isr_handler(void*){
-  // // high side
-  // uint32_t mcpwm_intr_status = MCPWM0.int_st.timer0_tez_int_st;
-  
-  // low side
-  uint32_t mcpwm_intr_status = MCPWM0.int_st.timer0_tep_int_st;
-  if(mcpwm_intr_status){
-    adc_buffer[0][adc_read_index[0]] = adcRead(adc_pins[0][adc_read_index[0]]);
-    adc_read_index[0]++;
-    if(adc_read_index[0] == adc_pin_count[0]) adc_read_index[0] = 0;
-  }
-  // low side
-  MCPWM0.int_clr.timer0_tep_int_clr = mcpwm_intr_status;
-  // high side
-  // MCPWM0.int_clr.timer0_tez_int_clr = mcpwm_intr_status_0;
-}
+// 当中断被触发时读取电流
+static void IRAM_ATTR mcpwm0_isr_handler(void*) {
+    // // 高侧
+    // uint32_t mcpwm_intr_status = MCPWM0.int_st.timer0_tez_int_st;
 
+    // 低侧
+    uint32_t mcpwm_intr_status = MCPWM0.int_st.timer0_tep_int_st;
+    if(mcpwm_intr_status) {
+
+        adc_buffer[0][adc_read_index[0]] = adcRead(adc_pins[0][adc_read_index[0]]);
+
+        adc_read_index[0]++;
+        if(adc_read_index[0] == adc_pin_count[0]) adc_read_index[0] = 0;
+    }
+
+    // 低侧
+    MCPWM0.int_clr.timer0_tep_int_clr = mcpwm_intr_status;
+    // 高侧
+    // MCPWM0.int_clr.timer0_tez_int_clr = mcpwm_intr_status_0;
+}
 static void IRAM_ATTR mcpwm1_isr_handler(void*) __attribute__ ((unused));
 
-// Read currents when interrupt is triggered
-static void IRAM_ATTR mcpwm1_isr_handler(void*){
-  // // high side
-  // uint32_t mcpwm_intr_status = MCPWM1.int_st.timer0_tez_int_st;
-  
-  // low side
-  uint32_t mcpwm_intr_status = MCPWM1.int_st.timer0_tep_int_st;
-  if(mcpwm_intr_status){
-    adc_buffer[1][adc_read_index[1]] = adcRead(adc_pins[1][adc_read_index[1]]);
-    adc_read_index[1]++;
-    if(adc_read_index[1] == adc_pin_count[1]) adc_read_index[1] = 0;
-  }
-  // low side
-  MCPWM1.int_clr.timer0_tep_int_clr = mcpwm_intr_status;
-  // high side
-  // MCPWM1.int_clr.timer0_tez_int_clr = mcpwm_intr_status_0;
+// 当中断被触发时读取电流
+static void IRAM_ATTR mcpwm1_isr_handler(void*) {
+    // // 高侧
+    // uint32_t mcpwm_intr_status = MCPWM1.int_st.timer0_tez_int_st;
+
+    // 低侧
+    uint32_t mcpwm_intr_status = MCPWM1.int_st.timer0_tep_int_st;
+    if(mcpwm_intr_status) {
+        adc_buffer[1][adc_read_index[1]] = adcRead(adc_pins[1][adc_read_index[1]]);
+        adc_read_index[1]++;
+        if(adc_read_index[1] == adc_pin_count[1]) adc_read_index[1] = 0;
+    }
+    // 低侧
+    MCPWM1.int_clr.timer0_tep_int_clr = mcpwm_intr_status;
+    // 高侧
+    // MCPWM1.int_clr.timer0_tez_int_clr = mcpwm_intr_status_0;
 }
 
 
