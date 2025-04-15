@@ -220,7 +220,7 @@
 //boolean Ready= true;
 //
 //// 定义速度限制参数
-//const float MAX_ALLOWED_SPEED = 120.0f;
+//const float MAX_ALLOWED_SPEED = 100.0f;
 //
 //int speed_count = 5;
 //
@@ -265,10 +265,10 @@
 //
 //
 //void loop() {
+//
 //    if (motor_A.motor_status == motor_ready && motor_B.motor_status == motor_ready&&Ready)
 //    {
 //        buzzer.play(S_SIREN);
-//        delay(500);
 //        Ready= false;
 //    }
 //
@@ -316,7 +316,6 @@
 //
 //        //============================保护=================================
 //
-//        Serial.println(Now_Speed);
 //        // 如果速度超过限制
 //        if (Now_Speed > MAX_ALLOWED_SPEED) {
 //            balanceCarPowerOff();

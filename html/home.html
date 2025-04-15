@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>车辆状态显示</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .vehicle-status {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .status-item {
+            margin-bottom: 15px;
+        }
+        .status-item label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .status-item span {
+            font-size: 1.2em;
+            color: #333;
+        }
+        .battery-bar {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .battery-bar-fill {
+            height: 20px;
+            background-color: #4caf50;
+            width: 0;
+            transition: width 0.5s ease;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .toggle-switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        .toggle-switch input:checked + .toggle-switch-slider {
+            background-color: #4caf50;
+        }
+        .toggle-switch input:focus + .toggle-switch-slider {
+            box-shadow: 0 0 1px #4caf50;
+        }
+        .toggle-switch input:checked + .toggle-switch-slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+<div class="vehicle-status">
+    <div class="status-item">
+        <label for="battery">电量百分比</label>
+        <div class="battery-bar">
+            <div class="battery-bar-fill" id="battery-bar-fill" style="width: 50%;"></div>
+        </div>
+        <span id="battery-percentage">50%</span>
+    </div>
+    <div class="status-item">
+        <label for="power-switch">电源开关</label>
+        <label class="toggle-switch">
+            <input type="checkbox" id="power-switch">
+            <span class="toggle-switch-slider"></span>
+        </label>
+    </div>
+    <div class="status-item">
+        <label for="temperature">温度</label>
+        <span id="temperature">25°C</span>
+    </div>
+</div>
+<script>
+    // 模拟车辆状态更新
+    setInterval(() => {
+        const batteryPercentage = Math.floor(Math.random() * 100); // 随机电量百分比
+        const temperature = Math.floor(Math.random() * 50 + 15); // 随机温度
+
+        document.getElementById('battery-percentage').textContent = `${batteryPercentage}%`;
+        document.getElementById('battery-bar-fill').style.width = `${batteryPercentage}%`;
+        document.getElementById('temperature').textContent = `${temperature}°C`;
+    }, 2000); // 每2秒更新一次
+</script>
+</body>
+</html>

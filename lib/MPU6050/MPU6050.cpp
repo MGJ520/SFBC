@@ -145,7 +145,9 @@ void MPU6050::update() {
     rawAccX = wire->read() << 8 | wire->read();
     rawAccY = wire->read() << 8 | wire->read();
     rawAccZ = wire->read() << 8 | wire->read();
-    rawTemp = wire->read() << 8 | wire->read();  // 温度数据未使用
+
+    rawTemp = wire->read() << 8 | wire->read();  // 温度数据
+    temperature = (rawTemp / 340.0) + 36.53;  // 根据数据手册公式转换
 
     // 解析陀螺仪原始数据
     rawGyroX = wire->read() << 8 | wire->read();

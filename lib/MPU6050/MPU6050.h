@@ -146,6 +146,8 @@ public:
         return angleZ;
     };
 
+    float  temperature=0;
+
 private:
     TwoWire *wire;
 
@@ -160,6 +162,7 @@ private:
     float angleX, angleY, angleZ;
 
     float interval, preGyroX;
+
     long preInterval;
 
     float accCoef, gyroCoef, gyroCoefX, preGyroCoefX;
