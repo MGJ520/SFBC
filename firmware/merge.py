@@ -29,7 +29,7 @@ def copy_merge_bins(source, target, env):
     mcu = board.get("build.mcu", "esp32")
     # 构造目标固件文件路径，包含输出目录、主控芯片型号、文件名、闪存大小和偏移量
     current_directory = os.getcwd()
-    firmware_dst = "{}/firmware/{}_{}_0x0.bin".format(current_directory, mcu, flash_size)
+    firmware_dst = "{}/firmware/{}_{}_0x0.bin".format(current_directory,name,flash_size)
     # 如果目标固件文件已存在，则删除
     if os.path.isfile(firmware_dst):
         os.remove(firmware_dst)
