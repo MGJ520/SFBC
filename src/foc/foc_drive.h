@@ -1,0 +1,76 @@
+//
+// Created by MGJ on 2025/4/23.
+//
+
+#ifndef FOC_CODE_FOC_DRIVE_H
+#define FOC_CODE_FOC_DRIVE_H
+
+
+#include "mpu/MPU6050.h"
+
+
+
+
+#define PID_CS_P          0.3
+#define PID_CS_I          0.1
+#define PID_CS_D          0.0
+
+#define LPF_velocity_Tf   0.10
+#define LPF_current_d_Tf  0.03
+#define LPF_current_q_Tf  0.03
+#define LPF_angle_Tf      0.05
+
+
+
+extern Commander command;
+
+// 速度PID控制器
+extern PIDController pid_speed;
+
+// 角度PID控制器
+extern PIDController pid_angle;
+
+// 卡尔曼滤波器
+extern SimpleKalmanFilter KalmanFilter_mpu;
+
+// 低通滤波器
+extern LowPassFilter lpf_speed;
+extern LowPassFilter lpf_trun;
+extern LowPassFilter lpf_run;
+
+// 偏置参数
+extern float Offset_parameters;
+
+// 磁传感器
+extern MagneticSensorI2C sensor_A;
+extern MagneticSensorI2C sensor_B;
+
+// I2C总线
+extern TwoWire I2C_A;
+extern TwoWire I2C_B;
+
+// MPU6050
+extern MPU6050 mpu6050;
+
+// 无刷电机
+extern BLDCMotor motor_A;
+extern BLDCMotor motor_B;
+
+// 电机驱动器
+extern BLDCDriver3PWM driver_A;
+extern BLDCDriver3PWM driver_B;
+
+// 电流检测
+extern LowsideCurrentSense cs_A;
+extern LowsideCurrentSense cs_B;
+
+
+void MotorOpen();
+void MotorClose();
+void Foc_Parameters_init();
+void onTarget(char *cmd);
+
+void Foc_A_Initialize(void *pvParameters);
+void Foc_B_Initialize(void *pvParameters);
+
+#endif //FOC_CODE_FOC_DRIVE_H

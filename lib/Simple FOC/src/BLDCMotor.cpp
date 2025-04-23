@@ -144,7 +144,7 @@ int BLDCMotor::initFOC() {
     // 如果需要，则对电机进行对齐
     // 对于编码器，对齐是必要的！
     // 传感器和电机对齐 - 可以通过设置 motor.sensor_direction 和 motor.zero_electric_angle 来跳过
-    _delay(200); // 延时 500 毫秒
+    _delay(50); // 延时 500 毫秒
     if (sensor) { // 如果有传感器
         exit_flag *= alignSensor(); // 调用 alignSensor 函数进行传感器对齐，并将返回值与 exit_flag 相乘
         // 添加了转轴角度更新
@@ -158,7 +158,7 @@ int BLDCMotor::initFOC() {
     // 对电流传感器进行对齐 - 可以跳过
     // 检查驱动器相位是否与电流检测相位一致
     // 并检查测量方向
-    _delay(200); // 延时 500 毫秒
+    _delay(100); // 延时 500 毫秒
     if (exit_flag) { // 如果之前的对齐操作成功
         if (current_sense) { // 如果有电流检测
             if (!current_sense->initialized) { // 如果电流检测未初始化
@@ -239,7 +239,7 @@ int BLDCMotor::alignSensor() {
         sensor->update();
         float end_angle = sensor->getAngle(); // 获取最终角度
         setPhaseVoltage(0, 0, 0); // 停止所有电压
-        _delay(200); // 延时 200 毫秒
+        _delay(150); // 延时 200 毫秒
         // 确定传感器的运动方向
         float moved = fabs(mid_angle - end_angle); // 计算角度变化
         if (moved < MIN_ANGLE_DETECT_MOVEMENT) { // 如果角度变化小于最小可检测值
@@ -267,7 +267,7 @@ int BLDCMotor::alignSensor() {
         // 对齐电机和传感器的电气相位
         // 设置角度为 -90 度（270 度 = 3π/2）
         setPhaseVoltage(voltage_sensor_align, 0, _3PI_2); // 设置相电压
-        _delay(700); // 延时 700 毫秒
+        _delay(150); // 延时 700 毫秒
         // 读取传感器数据
         sensor->update();
         // 获取当前电气零角度
@@ -280,7 +280,7 @@ int BLDCMotor::alignSensor() {
         }
         // 停止所有电压
         setPhaseVoltage(0, 0, 0);
-        _delay(200); // 延时 200 毫秒
+        _delay(150); // 延时 200 毫秒
     } else {
         SIMPLEFOC_DEBUG("MOT: Skip offset calib."); // 调试信息：跳过偏移校准
     }

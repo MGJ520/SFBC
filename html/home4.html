@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能车辆控制系统</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f5f6fa;
+        }
+
+        /* 导航样式 */
+        .nav-container {
+            background: var(--dark);
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .nav-button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button.active {
+            background: var(--secondary);
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
+        }
+
+        /* 页面容器 */
+        .page-container {
+            margin-top: 80px;
+            padding: 2rem;
+            display: none;
+        }
+
+        .page-container.active {
+            display: block;
+        }
+
+        /* 摇杆控制样式 */
+        .joystick-container {
+            width: 300px;
+            height: 300px;
+            background: white;
+            border-radius: 50%;
+            margin: 2rem auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .joystick-base {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #f0f0f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .joystick-thumb {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary);
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s;
+            touch-action: none;
+        }
+
+        /* 设置页面样式 */
+        .settings-form {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        /* Docker状态样式 */
+        .docker-stats {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .docker-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+<nav class="nav-container">
+    <div class="nav-menu">
+        <button class="nav-button active" onclick="switchPage('home')">主页</button>
+        <button class="nav-button" onclick="switchPage('control')">遥控</button>
+        <button class="nav-button" onclick="switchPage('docker')">Docker</button>
+        <button class="nav-button" onclick="switchPage('settings')">设置</button>
+    </div>
+</nav>
+
+<!-- 主页 -->
+<div id="home" class="page-container active">
+    <!-- 原有主页内容 -->
+</div>
+
+<!-- 遥控页面 -->
+<div id="control" class="page-container">
+    <div class="joystick-container">
+        <div class="joystick-base" id="joystickBase">
+            <div class="joystick-thumb" id="joystickThumb"></div>
+        </div>
+    </div>
+    <div class="status-text" id="joystickValue">X: 0, Y: 0</div>
+</div>
+
+<!-- Docker页面 -->
+<div id="docker" class="page-container">
+    <div class="docker-stats">
+        <div class="docker-card">
+            <div class="metric-label">容器运行状态</div>
+            <div class="metric-value" id="containerStatus">正常</div>
+        </div>
+        <div class="docker-card">
+            <div class="metric-label">CPU使用率</div>
+            <div class="metric-value" id="cpuUsage">35%</div>
+        </div>
+        <div class="docker-card">
+            <div class="metric-label">内存占用</div>
+            <div class="metric-value" id="memoryUsage">1.2/4GB</div>
+        </div>
+    </div>
+</div>
+
+<!-- 设置页面 -->
+<div id="settings" class="page-container">
+    <form class="settings-form">
+        <div class="form-group">
+            <label>温度单位</label>
+            <select id="tempUnit">
+                <option value="c">摄氏度 (℃)</option>
+                <option value="f">华氏度 (℉)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>摇杆灵敏度</label>
+            <input type="range" id="joystickSensitivity" min="1" max="10" value="5">
+        </div>
+        <div class="form-group">
+            <label>自动更新时间</label>
+            <input type="range" id="updateInterval" min="1" max="60" value="5">
+        </div>
+    </form>
+</div>
+
+<script>
+    // 页面切换功能
+    function switchPage(pageId) {
+        document.querySelectorAll('.page-container').forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById(pageId).classList.add('active');
+
+        document.querySelectorAll('.nav-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    // 摇杆控制逻辑
+    const joystickBase = document.getElementById('joystickBase');
+    const joystickThumb = document.getElementById('joystickThumb');
+    const joystickValue = document.getElementById('joystickValue');
+    let isDragging = false;
+
+    // 触摸事件处理
+    joystickBase.addEventListener('touchstart', startDrag);
+    joystickBase.addEventListener('touchmove', drag);
+    joystickBase.addEventListener('touchend', endDrag);
+
+    // 鼠标事件处理
+    joystickBase.addEventListener('mousedown', startDrag);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', endDrag);
+
+    function startDrag(e) {
+        isDragging = true;
+        updatePosition(e);
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+        updatePosition(e);
+    }
+
+    function endDrag() {
+        isDragging = false;
+        joystickThumb.style.transform = 'translate(-50%, -50%)';
+        joystickValue.textContent = 'X: 0, Y: 0';
+    }
+
+    function updatePosition(e) {
+        const rect = joystickBase.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        let clientX, clientY;
+        if (e.touches) {
+            clientX = e.touches[0].clientX - rect.left;
+            clientY = e.touches[0].clientY - rect.top;
+        } else {
+            clientX = e.clientX - rect.left;
+            clientY = e.clientY - rect.top;
+        }
+
+        const deltaX = clientX - centerX;
+        const deltaY = clientY - centerY;
+        const distance = Math.sqrt(deltaX**2 + deltaY**2);
+        const maxDistance = centerX - 30; // 限制移动范围
+
+        if (distance > maxDistance) {
+            const angle = Math.atan2(deltaY, deltaX);
+            clientX = centerX + Math.cos(angle) * maxDistance;
+            clientY = centerY + Math.sin(angle) * maxDistance;
+        }
+
+        const posX = (clientX - centerX) / maxDistance;
+        const posY = (clientY - centerY) / maxDistance;
+
+        joystickThumb.style.transform = `translate(${clientX - 30}px, ${clientY - 30}px)`;
+        joystickValue.textContent = `X: ${posX.toFixed(2)}, Y: ${posY.toFixed(2)}`;
+    }
+
+    // Docker状态模拟更新
+    function updateDockerStats() {
+        document.getElementById('cpuUsage').textContent =
+            `${Math.floor(Math.random() * 20 + 30)}%`;
+        document.getElementById('memoryUsage').textContent =
+            `${(Math.random() * 2 + 1).toFixed(1)}/4GB`;
+    }
+
+    setInterval(updateDockerStats, 3000);
+</script>
+</body>
+</html>

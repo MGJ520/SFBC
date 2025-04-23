@@ -54,11 +54,18 @@ int LowsideCurrentSense::init() {
     // 将配置好的ADC参数同步到驱动器中
     _driverSyncLowSide(driver->params, params);
 
-    // 校准零偏移量
-    SIMPLEFOC_DEBUG("CUR: CurrentSense calibrateOffsets"); // 打印调试信息：开始校准偏移量
 
-    calibrateOffsets();
 
+    if (offset_flag)
+    {
+        SIMPLEFOC_DEBUG("CUR:calibrateOffsets"); // 打印调试信息：开始校准偏移量
+        calibrateOffsets();
+        offset_flag= false;
+
+    } else
+    {
+        SIMPLEFOC_DEBUG("CUR:Skip Offset"); // 打印调试信息：初始化成功
+    }
 
 
     // 设置初始化标志
@@ -134,7 +141,8 @@ int LowsideCurrentSense::driverAlign(float voltage) {
     if (_isset(pinA)) {
         // set phase A active and phases B and C down
         driver->setPwm(voltage, 0, 0);
-        _delay(2000);
+        //修改
+        _delay(500);
         PhaseCurrent_s c = getPhaseCurrents();
         // read the current 100 times ( arbitrary number )
         for (int i = 0; i < 100; i++) {

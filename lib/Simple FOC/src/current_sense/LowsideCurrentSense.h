@@ -60,11 +60,12 @@ public:
     float offset_ib; //!< B 相零电流时的电压值（ADC 读数的中心值）
     float offset_ic; //!< C 相零电流时的电压值（ADC 读数的中心值）
 
-    int   cs_num=1;
+    boolean offset_flag= true;
     int pinC;
     int pinB;
 // 硬件相关变量
 int pinA;
+
 private:
 
     //!< 用于电流测量的 A 相模拟引脚
