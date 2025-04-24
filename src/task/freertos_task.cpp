@@ -12,7 +12,7 @@
 
 #include "esp_task_wdt.h"
 
-
+TaskHandle_t Task0;
 TaskHandle_t Task1;
 TaskHandle_t Task2;
 TaskHandle_t Task3;
@@ -26,7 +26,7 @@ void Start_Task()
                             2048,
                             NULL,
                             2,
-                            NULL,
+                            &Task0,
                             0);
 
 
@@ -61,14 +61,19 @@ void Start_Task()
 void eeprom_writer_task_run()
 {
 
+    vTaskSuspend(Task0);
+    vTaskSuspend(Task1);
+    vTaskSuspend(Task2);
+    vTaskSuspend(Task3);
 
-    Serial.println("[eeprom]:写EEprom数据,保存电流offset参数");
 
-//    xTaskCreatePinnedToCore(EEPROM_Write_Data,
-//                            "Task3",
-//                            4096,
-//                            NULL,
-//                            2,
-//                            &Task4,
-//                            0);
+    Serial.println("[nvs]:写数据,保存电流offset参数");
+
+    xTaskCreatePinnedToCore(Save_Data,
+                            "Save_Data",
+                            10000,
+                            NULL,
+                            tskIDLE_PRIORITY,
+                            &Task4,
+                            0);
 }

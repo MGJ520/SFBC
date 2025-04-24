@@ -8,7 +8,7 @@
 #define DATA_VERSION   ((__DATE__[8] - '0') * 10 + (__DATE__[9] - '0'))
 
 //更新变量
-#define DEFAULT_TIME   2
+#define DEFAULT_TIME   1
 
 
 #endif  // COMMON_DEFS_H

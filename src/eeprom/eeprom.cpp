@@ -9,7 +9,7 @@
 #include "task/freertos_task.h"
 
 #include "esp_task_wdt.h" // 需要包含看门狗头文件
-
+#include "power/BatteryAndButton.h"
 
 
 Preferences prefs;
@@ -70,16 +70,27 @@ void Read_Data() {
 
 
 
-void Save_Data() {
-    esp_task_wdt_init(10, true); // 5秒超时
-    esp_task_wdt_delete(NULL);
+void Save_Data(void *pvParameters) {
+    // 临时延长看门狗超时
     prefs.begin(NAMESPACE, false); // 以读写模式打开命名空间
     // 更新版本时间戳
     motor_data.version_time = DEFAULT_TIME;
     // 保存结构体数据
     prefs.putBytes("motor_data", &motor_data, sizeof(Preferences_Data));
+
     // 提交并关闭
     prefs.end();
-    esp_task_wdt_init(10, true); // 5秒超时
+
     Serial.println("[nvs]:数据保存成功");
+
+
+
+    vTaskResume(Task0);
+    vTaskResume(Task1);
+    vTaskResume(Task2);
+    vTaskResume(Task3);
+
+    vTaskDelete(Task4);
 }
+
+
