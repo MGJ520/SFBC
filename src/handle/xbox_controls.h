@@ -9,7 +9,7 @@
 
 extern XboxSeriesXControllerESP32_asukiaaa::Core xboxController;
 
-void Handle_control_tasks(void *pvParameters);
+[[noreturn]] void Handle_control_tasks(void *pvParameters);
 
 
 #endif //FOC_CODE_XBOX_CONTROLS_H

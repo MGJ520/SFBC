@@ -9,8 +9,8 @@
 
 extern TaskHandle_t Task1;
 extern TaskHandle_t Task2;
-
-
+extern TaskHandle_t Task4;
+extern TaskHandle_t Task3;
 void Start_Task();
 
 

@@ -18,6 +18,8 @@ float vcc_voltage_out = 0;
 
 uint16_t battery_low = 0;
 
+uint16_t s_count = 500;
+
 // 预定义的电压和电量百分比数组（全局常量）
 const double voltages[] = {6.9, 7.36, 7.48, 7.58, 7.74, 7.86, 8.4};
 
@@ -93,45 +95,43 @@ void CheckBatteryVoltageForSafety() {
 
 
     if (batteryVoltage_raw < 2000) {
-        Serial.print("\n[电池]:原始数据: ");
-        Serial.println(batteryVoltage_raw);
-        Serial.print("[电池]:计算ADC电压: ");
-        Serial.println(adc_voltage_out);
-        Serial.print("[电池]:计算VCC电压: ");
-        Serial.println(vcc_voltage_out);
-        Serial.print("[电池]:计算电池电量: ");
-        Serial.println(battery_percent);
-        Serial.println("[电池-动作]:触发保护模式,过载或电池电压低");
+        if (++s_count>500)
+        {
+            s_count=0;
+            Serial.print("\n[电池]:原始数据: ");
+            Serial.println(batteryVoltage_raw);
+            Serial.print("[电池]:计算ADC电压: ");
+            Serial.println(adc_voltage_out);
+            Serial.print("[电池]:计算VCC电压: ");
+            Serial.println(vcc_voltage_out);
+            Serial.print("[电池]:计算电池电量: ");
+            Serial.println(battery_percent);
+            Serial.println("[电池-动作]:已触发保护,过载或电池电压低");
+        }
+
         BatteryVoltageNotSafety();
     }
 }
 
 
-// 定义一个任务函数，用于处理按钮事件
-void ButtonEventTask(void *pvParameters) {
-    // 任务主循环
-    for (;;) {
-        // 调用按钮对象的tick函数，处理按钮事件
+
+[[noreturn]] void ButtonBatteryTask(void *pvParameters) {
+    while (true) {
+
         bnt.tick();
+
 #ifdef BUTTON_WIFI_GPIO
         bnt_wifi.tick();
 #endif
-        // 任务延时50ms
-        vTaskDelay(20);
-    }
-};
 
+        // 任务延时5ms
+        vTaskDelay(5);
 
-// 定义一个任务函数，用于周期性检查电池电压
-void BatteryVoltageCheckTask(void *pvParameters) {
-    // 任务主循环
-    for (;;) {
-        // 调用CheckBatteryVoltageForSafety函数，检查电池电压是否安全
+        // 检查电池电压是否安全
         CheckBatteryVoltageForSafety();
-        // 任务延时50ms
-        vTaskDelay(20);
     }
 };
+
 
 
 boolean PWR_AND_BNT::init(void) {
@@ -203,7 +203,7 @@ boolean PWR_AND_BNT::init(void) {
         return false;
     }
 
-    if (vcc_voltage_out < 6) {
+    if (vcc_voltage_out < 6.2) {
         Serial.print("[电池]:低电压");
         return false;
     }

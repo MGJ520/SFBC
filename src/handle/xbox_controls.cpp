@@ -11,33 +11,34 @@
 XboxSeriesXControllerESP32_asukiaaa::Core xboxController;
 
 
-
-void Handle_control_tasks(void *pvParameters) {
+[[noreturn]] void Handle_control_tasks(void *pvParameters) {
     xboxController.begin();
-    while (1)
-    {
+    uint16_t joystickMax = XboxControllerNotificationParser::maxJoy;
+    while (true) {
         xboxController.onLoop();
+        vTaskDelay(pdMS_TO_TICKS(1)); // 延时1000ms
         if (xboxController.isConnected()) {
             if (!xboxController.isWaitingForFirstNotification()) {
-                uint16_t joystickMax = XboxControllerNotificationParser::maxJoy;
                 C_Speed = ((float) xboxController.xboxNotif.joyLVert / (float) joystickMax) - 0.5f;
                 C_Turn = ((float) xboxController.xboxNotif.joyRHori / (float) joystickMax) - 0.5f;
-                if (( xboxController.xboxNotif.btnB) && System_Status == Open) {
+                //打开保护
+                if ((xboxController.xboxNotif.btnB) && System_Status == Open) {
                     MotorClose();
                     buzzer.play(S_JUMP);
                 }
+                //关机
                 if (xboxController.xboxNotif.btnY) {
                     balanceCarPowerOff();
                     buzzer.play(S_JUMP);
                 }
+                //关闭保护
                 if ((xboxController.xboxNotif.btnLB || xboxController.xboxNotif.btnRB) && System_Status == Dis) {
                     MotorOpen();
                     buzzer.play(S_MODE1);
                 }
-                C_Speed = lpf_run(C_Speed);
-                C_Turn = lpf_trun(C_Turn);
             }
+            C_Speed = lpf_run(C_Speed);
+            C_Turn = lpf_trun(C_Turn);
         }
-        vTaskDelay(1);
     }
 }

@@ -41,6 +41,10 @@ void BatteryVoltageCheckTask(void *pvParameters);
 
 void eeprom_writer_task_run();
 
+[[noreturn]] void ButtonBatteryTask(void *pvParameters);
+
+void eeprom_writer_task_run();
+
 extern PWR_AND_BNT PowerAndButton;
 extern uint16_t batteryVoltage_raw;
 extern float vcc_voltage_out;

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <<<<<<< HEAD:src/Test/temp_read.cpp
 #include "driver/temp_sensor.h"  // 引入温度传感器驱动库
 #include "MPU6050.h"
@@ -39,6 +40,8 @@ void loop()
 
 }
 =======
+=======
+>>>>>>> 590c94a (first commit)
 //#include "driver/temp_sensor.h"  // 引入温度传感器驱动库
 //#include "MPU6050.h"
 //#include "Arduino.h"
@@ -78,4 +81,8 @@ void loop()
 //    Serial.printf("ESP32: %0.0f,MPU: %0.2f\n", tsens_out,mpu6050.temperature);    // 通过串口输出温度值，格式为浮点数
 //
 //}
+<<<<<<< HEAD
 >>>>>>> 06efc59 (first commit):src/test/temp_read.cpp
+=======
+
+>>>>>>> 590c94a (first commit)

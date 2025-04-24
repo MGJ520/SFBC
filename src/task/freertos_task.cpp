@@ -3,72 +3,72 @@
 //
 
 #include "freertos_task.h"
+
+
 #include "foc/foc_drive.h"
 #include "handle/xbox_controls.h"
 #include "power/BatteryAndButton.h"
 #include "eeprom/eeprom.h"
 
+#include "esp_task_wdt.h"
+
 
 TaskHandle_t Task1;
 TaskHandle_t Task2;
-
+TaskHandle_t Task3;
+TaskHandle_t Task4;
 
 void Start_Task()
 {
 
-    xTaskCreatePinnedToCore(BatteryVoltageCheckTask,
-                            "Battery_Voltage_Check",
-                            2048,
-                            NULL,
-                            9,
-                            NULL,
-                            1);
-
-
-    xTaskCreatePinnedToCore(ButtonEventTask,
+    xTaskCreatePinnedToCore(ButtonBatteryTask,
                             "Button_Event",
                             2048,
                             NULL,
                             2,
                             NULL,
-                            1);
+                            0);
 
 
     xTaskCreatePinnedToCore(Foc_A_Initialize,
-                            "Task1",
-                            10000,
+                            "Foc_A_Initialize",
+                            2048,
                             NULL,
-                            10,
+                            3,
                             &Task1,
-                            1);
+                            0);
 
 
     xTaskCreatePinnedToCore(Foc_B_Initialize,
-                            "Task2",
-                            10000,
+                            "Foc_B_Initialize,",
+                            2048,
                             NULL,
-                            11,
+                            4,
                             &Task2,
-                            1);
+                            0);
+
 
 
     xTaskCreatePinnedToCore(Handle_control_tasks,
-                            "Task4",
-                            10000,
+                            "Handle_control",
+                            4096,
                             NULL,
-                            0,
-                            NULL,
-                            0);
+                            2,
+                            &Task3,
+                            1);
 
 }
 void eeprom_writer_task_run()
 {
-    Serial.println("[EEprom]:写EEprom数据,保存电流offset参数");
-    xTaskCreatePinnedToCore(EEPROM_Write_Data,
-                            "Task3",
-                            10000,
-                            NULL,
-                            11,
-                            NULL,
-                            1);
+
+
+    Serial.println("[eeprom]:写EEprom数据,保存电流offset参数");
+
+//    xTaskCreatePinnedToCore(EEPROM_Write_Data,
+//                            "Task3",
+//                            4096,
+//                            NULL,
+//                            2,
+//                            &Task4,
+//                            0);
 }

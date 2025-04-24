@@ -5,6 +5,8 @@
 #include "foc/foc_drive.h"
 #include "control/control.h"
 #include "eeprom/eeprom.h"
+#include "handle/xbox_controls.h"
+#include "task/freertos_task.h"
 
 // 常量定义
 constexpr uint32_t SERIAL_BAUDRATE = 115200; // 定义串口通信的波特率，这里是115200
@@ -31,13 +33,21 @@ void SetupCarSystem() {
     // 检查电池模块是否初始化成功
     LogInitialization("电池模块", PowerAndButton.init());
 
+   // Read_Data();
 
-    // 检查驱动模块是否初始化成功
-    //LogInitialization("驱动模块", BalanceDriver.init());
+    //I2C
+    I2C_A.begin(SDA_A_GPIO, SCL_A_GPIO, 400000UL);
+    I2C_B.begin(SDA_B_GPIO, SCL_B_GPIO, 400000UL);
 
+    //MPU初始化
+    mpu6050.begin();
+
+    //Motor初始化参数
+    Foc_Parameters_init();
 
 
     Serial.println("\n================ 自检完成 =================");
+
     PrintTestResult(); // 打印最终的自检结果
 }
 
@@ -89,16 +99,16 @@ void Ready_Time() {
         buzzer.play(S_SIREN);
         Ready = false;
         MotorClose();
-        if (First_Ready) {
 
-            if (_isset(cs_A.pinA)) motor_data.A_Offset_ia = cs_A.offset_ia;
-            if (_isset(cs_A.pinB)) motor_data.A_Offset_ib = cs_A.offset_ib;
-            if (_isset(cs_A.pinC)) motor_data.A_Offset_ic = cs_A.offset_ic;
+//        if (First_Ready) {
+//            if (_isset(cs_A.pinA)) motor_data.A_Offset_ia = cs_A.offset_ia;
+//            if (_isset(cs_A.pinB)) motor_data.A_Offset_ib = cs_A.offset_ib;
+//            if (_isset(cs_A.pinC)) motor_data.A_Offset_ic = cs_A.offset_ic;
+//            if (_isset(cs_B.pinA)) motor_data.B_Offset_ia = cs_B.offset_ia;
+//            if (_isset(cs_B.pinB)) motor_data.B_Offset_ib = cs_B.offset_ib;
+//            if (_isset(cs_B.pinC)) motor_data.B_Offset_ic = cs_B.offset_ic;
+//            Save_Data();
+//        }
 
-            if (_isset(cs_B.pinA)) motor_data.B_Offset_ia = cs_B.offset_ia;
-            if (_isset(cs_B.pinB)) motor_data.B_Offset_ib = cs_B.offset_ib;
-            if (_isset(cs_B.pinC)) motor_data.B_Offset_ic = cs_B.offset_ic;
-            eeprom_writer_task_run();
-        }
     }
 }

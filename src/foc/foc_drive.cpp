@@ -23,11 +23,13 @@ LowPassFilter lpf_trun = LowPassFilter(0.02);
 
 LowPassFilter lpf_run = LowPassFilter(0.02);
 
+
 //偏置参数
 float Offset_parameters = 1.8f;
 
-MagneticSensorI2C sensor_A = MagneticSensorI2C(AS5600_I2C); // 磁传感器A
-MagneticSensorI2C sensor_B = MagneticSensorI2C(AS5600_I2C); // 磁传感器B
+
+MagneticSensorI2C sensor_A = MagneticSensorI2C(AS5600_I2C);
+MagneticSensorI2C sensor_B = MagneticSensorI2C(AS5600_I2C);
 
 
 
@@ -42,9 +44,10 @@ MPU6050 mpu6050(I2C_B);
 #endif
 
 
-
 BLDCMotor motor_A = BLDCMotor(7); // 电机A
 BLDCMotor motor_B = BLDCMotor(7); // 电机B
+
+
 BLDCDriver3PWM driver_A = BLDCDriver3PWM(PWM_A_1_GPIO, PWM_A_2_GPIO, PWM_A_3_GPIO); // 电机A的驱动器
 BLDCDriver3PWM driver_B = BLDCDriver3PWM(PWM_B_1_GPIO, PWM_B_2_GPIO, PWM_B_3_GPIO); // 电机B的驱动器
 
@@ -97,7 +100,9 @@ void Foc_Parameters_init() {
     motor_A.current_limit = 3.0f;
 
     motor_A.KV_rating = 700;
+
     motor_A.sensor_direction = CW;
+
     motor_A.velocity_index_search = 2.0f;
     driver_A.voltage_power_supply = 8.0;
 
@@ -130,7 +135,9 @@ void Foc_Parameters_init() {
     motor_B.current_limit = 3.0f;
 
     motor_B.KV_rating = 700;
+
     motor_B.sensor_direction = CW;
+
     motor_B.velocity_index_search = 2.0f;
     driver_B.voltage_power_supply = 8.0;
 
@@ -204,7 +211,6 @@ void Foc_B_Initialize(void *pvParameters) {
     } else {
         Serial.println("[电机B]:初始化成功");
     }
-
 
     command.add('T', onTarget, "target velocity");
 
