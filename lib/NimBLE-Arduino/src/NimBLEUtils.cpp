@@ -16,6 +16,8 @@
  */
 
 #include "nimconfig.h"
+#include "Arduino.h"
+
 #if defined(CONFIG_BT_ENABLED)
 
 # include "NimBLEUtils.h"
@@ -83,18 +85,22 @@ NimBLETaskData::~NimBLETaskData() {
     }
 # endif
 }
-
 /**
- * @brief Blocks the calling task until released or timeout.
- * @param [in] taskData A pointer to the task data structure.
- * @param [in] timeout The time to wait in milliseconds.
- * @return True if the task completed, false if the timeout was reached.
+ * @brief 阻塞调用任务，直到被释放或超时。
+ * @param [in] taskData 指向任务数据结构的指针。
+ * @param [in] timeout 等待的时间，单位为毫秒。
+ * @return 如果任务完成返回 true，如果达到超时时间返回 false。
  */
 bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
+
+
+    // 将超时时间从毫秒转换为系统滴答时间
     ble_npl_time_t ticks;
     if (timeout == BLE_NPL_TIME_FOREVER) {
+
         ticks = BLE_NPL_TIME_FOREVER;
     } else {
+
         ble_npl_time_ms_to_ticks(timeout, &ticks);
     }
 
@@ -105,10 +111,13 @@ bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
         return true;
     }
 
-    return xTaskNotifyWait(0, TASK_BLOCK_BIT, nullptr, ticks) == pdTRUE;
+    bool result = xTaskNotifyWait(0, TASK_BLOCK_BIT, nullptr, ticks) == pdTRUE;
+    return result;
 
 # else
-    return ble_npl_sem_pend(static_cast<ble_npl_sem*>(taskData.m_pHandle), ticks) == BLE_NPL_OK;
+
+    bool result = ble_npl_sem_pend(static_cast<ble_npl_sem*>(taskData.m_pHandle), ticks) == BLE_NPL_OK;
+    return result;
 # endif
 } // taskWait
 

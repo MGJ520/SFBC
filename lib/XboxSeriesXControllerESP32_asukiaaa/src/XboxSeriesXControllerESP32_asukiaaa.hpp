@@ -4,8 +4,8 @@
 #include <XboxControllerNotificationParser.h>
 
 #include <XboxSeriesXHIDReportBuilder_asukiaaa.hpp>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include <freertos/FreeRTOS.h>
+
 // #define XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL Serial
 #ifdef XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL
 const unsigned long printInterval = 100UL;
@@ -205,29 +205,20 @@ namespace XboxSeriesXControllerESP32_asukiaaa {
         }
 
         void onLoop() {
-            // 检查是否与设备连接
             if (!isConnected()) {
-                // 如果未连接且有广告设备（advDevice）存在
                 if (advDevice != nullptr) {
-                    // 尝试连接到服务
                     auto connectionResult = connectToServer(advDevice);
-                    // 如果连接失败或者连接后仍然未连接
                     if (!connectionResult || !isConnected()) {
-                        // 删除与该设备的绑定关系
                         NimBLEDevice::deleteBond(advDevice->getAddress());
-                        // 增加连接失败的计数
                         ++countFailedConnection;
-                        // 重置连接状态为扫描状态（注释掉了reset()，可能是为了防止过度重置）
+                        // reset();
                         connectionState = ConnectionState::Scanning;
                     } else {
-                        // 如果连接成功，重置失败计数
                         countFailedConnection = 0;
                     }
-                    // 清空广告设备指针，避免重复连接
                     advDevice = nullptr;
                 } else if (!isScanning()) {
-                    // 如果没有广告设备且当前未处于扫描状态
-                    // 开始扫描设备（注释掉了reset()，可能是为了防止过度重置）
+                    // reset();
                     startScan();
                 }
             }
@@ -371,12 +362,8 @@ namespace XboxSeriesXControllerESP32_asukiaaa {
 
                 // NimBLEDevice::getScan()->stop();
                 // pClient->disconnect();
-
-                //修改
-//                delay(retryIntervalMs);
+//      delay(retryIntervalMs);
                 vTaskDelay(retryIntervalMs);
-
-
                 // Serial.println(pClient->toString().c_str());
                 pClient->connect(true);
                 --retryCount;
@@ -411,10 +398,6 @@ namespace XboxSeriesXControllerESP32_asukiaaa {
                 if (!sUuid.equals(uuidServiceHid) && !sUuid.equals(uuidServiceBattery)) {
                     continue;  // skip
                 }
-#ifdef XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL
-                XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.println(
-                    pService->toString().c_str());
-#endif
                 for (auto pChara: pService->getCharacteristics(true)) {
                     charaHandle(pChara);
                     charaSubscribeNotification(pChara);
@@ -424,67 +407,27 @@ namespace XboxSeriesXControllerESP32_asukiaaa {
             return true;
         }
 
-#ifdef XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL
-        void charaPrintId(NimBLERemoteCharacteristic* pChara) {
-          XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.printf(
-              "s:%s c:%s h:%d",
-              pChara->getRemoteService()->getUUID().toString().c_str(),
-              pChara->getUUID().toString().c_str(), pChara->getHandle());
-        }
-
-        static void printValue(std::__cxx11::string str) {
-          XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.printf("str: %s\n", str.c_str());
-          XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.printf("hex:");
-          for (auto v : str) {
-            XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.printf(" %02x", v);
-          }
-          XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.println("");
-        }
-#endif
-
         void charaHandle(NimBLERemoteCharacteristic *pChara) {
             if (pChara->canWrite()) {
-#ifdef XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL
-                charaPrintId(pChara);
-                XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.println(" canWrite");
-#endif
             }
             if (pChara->canRead()) {
-#ifdef XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL
-                charaPrintId(pChara);
-                XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.println(" canRead");
-#endif
                 // Reading value is required for subscribe
                 auto str = pChara->readValue();
                 if (str.size() == 0) {
                     str = pChara->readValue();
                 }
-#ifdef XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL
-                printValue(str);
-#endif
             }
         }
 
         void charaSubscribeNotification(NimBLERemoteCharacteristic *pChara) {
             if (pChara->canNotify()) {
-#ifdef XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL
-                charaPrintId(pChara);
-                XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.println(" canNotify ");
-#endif
                 if (pChara->subscribe(
                         true,
                         std::bind(&Core::notifyCB, this, std::placeholders::_1,
                                   std::placeholders::_2, std::placeholders::_3,
                                   std::placeholders::_4),
                         true)) {
-#ifdef XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL
-                    XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.println(
-                        "succeeded in subscribing");
-#endif
-                } else {
-#ifdef XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL
-                    XBOX_SERIES_X_CONTROLLER_DEBUG_SERIAL.println("failed subscribing");
-#endif
+
                 }
             }
         }
