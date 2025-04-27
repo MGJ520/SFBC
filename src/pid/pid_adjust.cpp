@@ -1,7 +1,3 @@
-//
-// Created by MGJ on 2025/4/26.
-//
-
 #include "pid_adjust.h"
 
 PID_Structure UprightPID;

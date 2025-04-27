@@ -2,6 +2,7 @@
 
 #include "buzzer/BuzzerSound.h"
 #include "OneButton.h"
+#include "led/led.h"
 
 // 定义一个OneButton对象，用于处理按钮事件，绑定到BUTTON_PIN引脚，并启用消抖功能
 OneButton bnt(BUTTON_PIN, true);
@@ -66,6 +67,10 @@ void balanceCarPowerOff() {
         // buzzer.play(powerOffID);
         battery_low = 1;
     }
+
+#ifdef LED_1_GPIO
+    R_LED.on();
+#endif
 
     // 将电源使能引脚设置为低电平，关闭电源
     digitalWrite(POWEREN_PIN, LOW);
