@@ -55,7 +55,6 @@ int LowsideCurrentSense::init() {
     _driverSyncLowSide(driver->params, params);
 
 
-
     if (offset_flag)
     {
         SIMPLEFOC_DEBUG("CUR:calibrateOffsets"); // 打印调试信息：开始校准偏移量

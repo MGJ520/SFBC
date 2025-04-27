@@ -10,7 +10,7 @@
 
 #include "control/control.h"
 
-#include "eeprom/eeprom.h"
+#include "nvs/nvs.h"
 
 #include "foc/foc_drive.h"
 
@@ -18,11 +18,11 @@
 
 #include "Init/init_System.h"
 
-#include "led/led_flash.h"
+#include "led/led.h"
 
 #include "mpu/MPU6050.h"
 
-//#include "pid/"
+#include "pid/pid_adjust.h"
 
 #include "power/BatteryAndButton.h"
 

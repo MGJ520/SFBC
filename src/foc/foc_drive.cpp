@@ -3,29 +3,10 @@
 #include "foc_drive.h"
 #include "task/freertos_task.h"
 #include "control/control.h"
+#include "nvs/nvs.h"
+#include "power/BatteryAndButton.h"
+#include "led/led.h"
 
-
-
-//速度
-PIDController pid_speed = PIDController(0.15, 0.00001, 0.001, 100000, 2.5);
-//角度
-PIDController pid_angle = PIDController(0.3, 0, 0.0001, 100000, 4);
-
-// e_mea: 测量不确定性   e_est: 估计不确定性 q: 过程噪声
-SimpleKalmanFilter KalmanFilter_mpu(1.2, 1.2, 0.1);
-
-//速度滤波
-LowPassFilter lpf_speed = LowPassFilter(0.02);
-
-//速度滤波
-LowPassFilter lpf_trun = LowPassFilter(0.02);
-
-
-LowPassFilter lpf_run = LowPassFilter(0.02);
-
-
-//偏置参数
-float Offset_parameters = 1.8f;
 
 
 MagneticSensorI2C sensor_A = MagneticSensorI2C(AS5600_I2C);
@@ -58,22 +39,49 @@ LowsideCurrentSense cs_B = LowsideCurrentSense(0.005f, 50.0f, ADC_B_1_GPIO, ADC_
 
 Commander command = Commander(Serial);
 
-
 void onTarget(char *cmd) {
     command.scalar(&Offset_parameters, cmd);
 }
+
+//void on_SP(char *cmd) {
+//    command.scalar(&pid_speed.P, cmd);
+//}
+//void on_SI(char *cmd) {
+//    command.scalar(&pid_speed.I, cmd);
+//}
+//void on_SD(char *cmd) {
+//    command.scalar(&pid_speed.D, cmd);
+//}
+//
+//void on_VP(char *cmd) {
+//    command.scalar(&pid_angle.P, cmd);
+//}
+//void on_VI(char *cmd) {
+//    command.scalar(&pid_angle.I, cmd);
+//}
+//void on_VD(char *cmd) {
+//    command.scalar(&pid_angle.D, cmd);
+//}
 
 
 void MotorOpen() {
     motor_A.enable();
     motor_B.enable();
-    System_Status = Open;
+    System_Status = Open_Output;
+#ifdef LED_1_GPIO
+    G_LED.doubleBlink();
+    R_LED.off();
+#endif
 }
 
 void MotorClose() {
     motor_A.disable();
     motor_B.disable();
-    System_Status = Dis;
+    System_Status = Disable_Output;
+#ifdef LED_1_GPIO
+    G_LED.off();
+    R_LED.blink();
+#endif
 }
 
 void Foc_Parameters_init() {
@@ -97,7 +105,7 @@ void Foc_Parameters_init() {
 
 
     motor_A.voltage_limit = 0.6f;
-    motor_A.current_limit = 3.0f;
+    motor_A.current_limit = 6.5f;
 
     motor_A.KV_rating = 700;
 
@@ -132,7 +140,7 @@ void Foc_Parameters_init() {
 
 
     motor_B.voltage_limit = 0.6f;
-    motor_B.current_limit = 3.0f;
+    motor_B.current_limit = 6.5f;
 
     motor_B.KV_rating = 700;
 
@@ -145,6 +153,8 @@ void Foc_Parameters_init() {
     cs_B.gain_b *= -1;
     cs_B.gain_c *= -1;
 
+
+
 }
 
 
@@ -156,12 +166,10 @@ void Foc_A_Initialize(void *pvParameters) {
     } else {
         Serial.println("[驱动器A]:初始化成功");
     }
-
     sensor_A.init(&I2C_A);
     motor_A.linkSensor(&sensor_A);
     motor_A.linkDriver(&driver_A);
     cs_A.linkDriver(&driver_A);
-
     Serial.println("[电流传感器A]:正在校准电流采样...");
     motor_A.init();
     if (!cs_A.init()) {
@@ -169,7 +177,6 @@ void Foc_A_Initialize(void *pvParameters) {
     } else {
         Serial.println("[电流传感器A]:初始化成功");
     }
-
     motor_A.linkCurrentSense(&cs_A);
     Serial.println("[电机A]:正在对齐编码器,驱动相位...");
     if (!motor_A.initFOC()) {
@@ -177,25 +184,21 @@ void Foc_A_Initialize(void *pvParameters) {
     } else {
         Serial.println("[电机A]:初始化成功");
     }
-
     vTaskDelete(Task1);
 }
 
 void Foc_B_Initialize(void *pvParameters) {
     Serial.println("B侧电机初始化...");
     motor_B.useMonitoring(Serial);
-
     if (!driver_B.init()) {
         Serial.println("[驱动器B]:初始化失败");
     } else {
         Serial.println("[驱动器B]:初始化成功");
     }
     sensor_B.init(&I2C_B);
-
     motor_B.linkSensor(&sensor_B);
     motor_B.linkDriver(&driver_B);
     cs_B.linkDriver(&driver_B);
-
     Serial.println("[电流传感器B]:正在校准电流采样...");
     motor_B.init();
     if (!cs_B.init()) {
@@ -203,7 +206,6 @@ void Foc_B_Initialize(void *pvParameters) {
     } else {
         Serial.println("[电流传感器B]:初始化成功");
     }
-
     motor_B.linkCurrentSense(&cs_B);
     Serial.println("[电机B]:正在对齐编码器,驱动相位...");
     if (!motor_B.initFOC()) {
@@ -211,8 +213,19 @@ void Foc_B_Initialize(void *pvParameters) {
     } else {
         Serial.println("[电机B]:初始化成功");
     }
-
-    command.add('T', onTarget, "target velocity");
-
+    command.add('T', onTarget, "T");
+//    command.add('A', on_SP, "A");
+//    command.add('B', on_SI, "B");
+//    command.add('C', on_SD, "C");
+//    command.add('D', on_VP, "D");
+//    command.add('E', on_VI, "E");
+//    command.add('F', on_VD, "F");
+//    A 0.15
+//    B 0.00001
+//    C 0
+//    D 0.25
+//    E 0.0001
+//    F 0.0001
+//    T 1.3
     vTaskDelete(Task2);
 }

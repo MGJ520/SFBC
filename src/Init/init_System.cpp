@@ -1,64 +1,77 @@
-#include <Arduino.h>
-#include "init_System.h"
-#include "power/BatteryAndButton.h"
-#include "buzzer/BuzzerSound.h"
-#include "foc/foc_drive.h"
-#include "control/control.h"
-#include "eeprom/eeprom.h"
-#include "handle/xbox_controls.h"
-#include "task/freertos_task.h"
 
-// 常量定义
-constexpr uint32_t SERIAL_BAUDRATE = 115200; // 定义串口通信的波特率，这里是115200
+#include "init_System.h"
+
+
+#include "power/BatteryAndButton.h"
+#include "nvs/nvs.h"
+#include "foc/foc_drive.h"
+#include "led/led.h"
+#include "buzzer/BuzzerSound.h"
+#include "control/control.h"
+#include "pid/pid_adjust.h"
+
+boolean Ready = true;
+
 constexpr int SHUTDOWN_DELAY_MS = 1000; // 定义关机倒计时的延迟时间，单位是毫秒（1秒）
 constexpr int ERROR_REPEAT_COUNT = 10; // 定义错误重复次数，用于关机倒计时的次数
+
 
 // 系统状态
 bool systemInitialized = true; // 用于标记系统是否初始化成功的标志，默认为true
 
-// 函数声明
-void PrintTestResult(); // 声明打印测试结果的函数
-void LogInitialization(const char* module, bool result); // 声明记录初始化结果的函数
-void EmitShutdownSequence(); // 声明执行关机序列的函数
-
-
 
 // 初始化系统
 void SetupCarSystem() {
-    // 初始化串口通信
+    //串口初始化
     Serial.begin(SERIAL_BAUDRATE);
+
     Serial.println("\n================ 自检开始 =================");
 
+    //LED初始化
+    init_led();
 
-    // 检查电池模块是否初始化成功
+    //电池源初始化
     LogInitialization("电池模块", PowerAndButton.init());
 
-   // Read_Data();
+    //nvs初始化
+    //Read_Data();
 
-    //I2C
+    //I2C初始化
     I2C_A.begin(SDA_A_GPIO, SCL_A_GPIO, 400000UL);
     I2C_B.begin(SDA_B_GPIO, SCL_B_GPIO, 400000UL);
 
     //MPU初始化
     mpu6050.begin();
 
-    //Motor初始化参数
+    //FOC参数初始化
     Foc_Parameters_init();
 
+    PID_parameters_Init();
 
-    Serial.println("\n================ 自检完成 =================");
-
-    PrintTestResult(); // 打印最终的自检结果
 }
 
 
+void Init_Loop() {
+    if (motor_A.motor_status == motor_ready && motor_B.motor_status == motor_ready && Ready) {
+        Ready = false;
+        buzzer.play(S_SIREN);
+        MotorClose();
+        Serial.println("\n================ 自检完成 =================");
+        PrintTestResult(); // 打印最终的自检结果
+    } else if (motor_A.motor_status == motor_init_failed && motor_B.motor_status == motor_init_failed && Ready
+    ||motor_A.motor_status == motor_init_failed && motor_B.motor_status == motor_ready && Ready
+    ||motor_A.motor_status == motor_ready && motor_B.motor_status == motor_init_failed && Ready
+    ) {
+        systemInitialized= false;
+        Serial.println("\n================ 自检完成 =================");
+        PrintTestResult(); // 打印最终的自检结果
+    }
 
-
-
+}
 
 
 // 记录模块初始化的结果
-void LogInitialization(const char* module, bool result) {
+void LogInitialization(const char *module, bool result) {
     Serial.printf("\n\n[初始化] %s - ", module); // 打印模块名称
     Serial.println(result ? "成功\n" : "失败!\n"); // 根据初始化结果打印成功或失败
 
@@ -68,6 +81,7 @@ void LogInitialization(const char* module, bool result) {
         Serial.printf("[错误] %s初始化失败，请检查硬件连接\n", module); // 提示用户检查硬件连接
     }
 }
+
 
 // 打印测试结果
 void PrintTestResult() {
@@ -85,6 +99,7 @@ void PrintTestResult() {
     Serial.println("==========================================\n"); // 打印分隔线
 }
 
+
 // 执行关机序列
 void EmitShutdownSequence() {
     // 倒计时关机
@@ -94,21 +109,4 @@ void EmitShutdownSequence() {
     }
 }
 
-void Ready_Time() {
-    if (motor_A.motor_status == motor_ready && motor_B.motor_status == motor_ready && Ready) {
-        buzzer.play(S_SIREN);
-        Ready = false;
-        MotorClose();
 
-//        if (First_Ready) {
-//            if (_isset(cs_A.pinA)) motor_data.A_Offset_ia = cs_A.offset_ia;
-//            if (_isset(cs_A.pinB)) motor_data.A_Offset_ib = cs_A.offset_ib;
-//            if (_isset(cs_A.pinC)) motor_data.A_Offset_ic = cs_A.offset_ic;
-//            if (_isset(cs_B.pinA)) motor_data.B_Offset_ia = cs_B.offset_ia;
-//            if (_isset(cs_B.pinB)) motor_data.B_Offset_ib = cs_B.offset_ib;
-//            if (_isset(cs_B.pinC)) motor_data.B_Offset_ic = cs_B.offset_ic;
-//            eeprom_writer_task_run();
-//        }
-
-    }
-}

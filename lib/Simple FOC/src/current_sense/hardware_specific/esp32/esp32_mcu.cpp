@@ -104,27 +104,43 @@ void* _configureADCLowSide(const void* driver_params, const int pinA,const int p
 }
 
 
-void _driverSyncLowSide(void* driver_params, void* cs_params){
-    // 获取mcpwm设备指针
+//void _driverSyncLowSide(void* driver_params, void* cs_params){
+//    // 获取mcpwm设备指针
+//    mcpwm_dev_t* mcpwm_dev = ((ESP32MCPWMDriverParams*)driver_params)->mcpwm_dev;
+//    // 获取mcpwm单元
+//    mcpwm_unit_t mcpwm_unit = ((ESP32MCPWMDriverParams*)driver_params)->mcpwm_unit;
+//
+//    // 使能低侧寄存器中断（使能PWM定时器0的TEP事件中断）
+//    mcpwm_dev->int_ena.timer0_tep_int_ena = true;//A PWM timer 0 TEP event will trigger this interrupt
+//
+//    // 高侧寄存器中断使能（注释掉了，若需要可取消注释）
+//    // mcpwm_dev->int_ena.timer0_tep_int_ena = true;//A PWM timer 0 TEZ event will trigger this interrupt
+//
+//    // 注册中断（mcpwm编号，中断处理函数，处理函数参数 = NULL，中断信号/标志，返回处理函数 = NULL）
+//    if(mcpwm_unit == MCPWM_UNIT_0)
+//        mcpwm_isr_register(mcpwm_unit, mcpwm0_isr_handler, NULL, ESP_INTR_FLAG_IRAM, NULL);  //Set ISR Handler
+//     else
+//        mcpwm_isr_register(mcpwm_unit, mcpwm1_isr_handler, NULL, ESP_INTR_FLAG_IRAM, NULL);  //Set ISR Handler
+//
+//}
+//修改
+void _driverSyncLowSide(void* driver_params, void* cs_params) {
     mcpwm_dev_t* mcpwm_dev = ((ESP32MCPWMDriverParams*)driver_params)->mcpwm_dev;
-    // 获取mcpwm单元
     mcpwm_unit_t mcpwm_unit = ((ESP32MCPWMDriverParams*)driver_params)->mcpwm_unit;
 
-    // 使能低侧寄存器中断（使能PWM定时器0的TEP事件中断）
-    mcpwm_dev->int_ena.timer0_tep_int_ena = true;//A PWM timer 0 TEP event will trigger this interrupt
+    // 使能低侧寄存器中断
+    mcpwm_dev->int_ena.timer0_tep_int_ena = true;
 
-    // 高侧寄存器中断使能（注释掉了，若需要可取消注释）
-    // mcpwm_dev->int_ena.timer0_tep_int_ena = true;//A PWM timer 0 TEZ event will trigger this interrupt
-
-    // 注册中断（mcpwm编号，中断处理函数，处理函数参数 = NULL，中断信号/标志，返回处理函数 = NULL）
-    if(mcpwm_unit == MCPWM_UNIT_0)
-    {
-        mcpwm_isr_register(mcpwm_unit, mcpwm0_isr_handler, NULL, ESP_INTR_FLAG_IRAM, NULL);  //Set ISR Handler
-
+    // 低优先级 + 共享中断
+    if (mcpwm_unit == MCPWM_UNIT_0) {
+        mcpwm_isr_register(mcpwm_unit, mcpwm0_isr_handler, NULL,
+                           ESP_INTR_FLAG_LEVEL1 | ESP_INTR_FLAG_SHARED, NULL);
+    } else {
+        mcpwm_isr_register(mcpwm_unit, mcpwm1_isr_handler, NULL,
+                           ESP_INTR_FLAG_LEVEL1 | ESP_INTR_FLAG_SHARED, NULL);
     }
-     else
-        mcpwm_isr_register(mcpwm_unit, mcpwm1_isr_handler, NULL, ESP_INTR_FLAG_IRAM, NULL);  //Set ISR Handler
 }
+
 static void IRAM_ATTR mcpwm0_isr_handler(void*) __attribute__ ((unused));
 
 // 当中断被触发时读取电流

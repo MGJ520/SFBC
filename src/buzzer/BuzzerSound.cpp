@@ -9,17 +9,14 @@ void BuzzerSoundsClass::Init(int aBuzzerPin) {
     ledcAttachPin(buzzerPin, ledc_channel); // pin, channel
 }
 
-///////////////////////////////////////////////////////////////////
-//-- SOUNDS -----------------------------------------------------//
-///////////////////////////////////////////////////////////////////
 
 void BuzzerSoundsClass::_tone(unsigned int noteFrequency, long noteDuration, int silentDuration) const {
-    if (silentDuration == 0) {
-        silentDuration = 1;
-    }
-    tone(buzzerPin, noteFrequency, noteDuration);
-    delay(noteDuration); // milliseconds
-    delay(silentDuration);
+//    if (silentDuration == 0) {
+//        silentDuration = 1;
+//    }
+//    tone(buzzerPin, noteFrequency, noteDuration);
+//    delay(noteDuration); // milliseconds
+//    delay(silentDuration);
 }
 
 void BuzzerSoundsClass::bendTones(float initFrequency, float finalFrequency, float prop, long noteDuration,

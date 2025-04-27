@@ -24,22 +24,6 @@
 
 extern Commander command;
 
-// 速度PID控制器
-extern PIDController pid_speed;
-
-// 角度PID控制器
-extern PIDController pid_angle;
-
-// 卡尔曼滤波器
-extern SimpleKalmanFilter KalmanFilter_mpu;
-
-// 低通滤波器
-extern LowPassFilter lpf_speed;
-extern LowPassFilter lpf_trun;
-extern LowPassFilter lpf_run;
-
-// 偏置参数
-extern float Offset_parameters;
 
 // 磁传感器
 extern MagneticSensorI2C sensor_A;

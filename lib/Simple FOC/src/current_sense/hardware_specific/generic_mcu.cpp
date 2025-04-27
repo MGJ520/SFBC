@@ -33,9 +33,12 @@ __attribute__((weak))  void* _configureADCLowSide(const void* driver_params, con
   return _configureADCInline(driver_params, pinA, pinB, pinC);
 }
 
-// sync driver and the adc
+// 同步驱动器和模数转换器（ADC）
+// 此函数用于在硬件驱动层面同步驱动器与ADC的操作，确保两者在数据采集和传输过程中保持一致。
 __attribute__((weak)) void _driverSyncLowSide(void* driver_params, void* cs_params){
-  _UNUSED(driver_params);
-  _UNUSED(cs_params); 
+    // driver_params: 驱动器参数指针，用于传递驱动器相关的配置或状态信息。
+    // cs_params: 控制信号参数指针，用于传递与控制信号相关的参数。
+    _UNUSED(driver_params); // 表示此参数在当前实现中未被使用，避免编译器警告。
+    _UNUSED(cs_params);     // 表示此参数在当前实现中未被使用，避免编译器警告。
 }
 __attribute__((weak)) void _startADC3PinConversionLowSide(){ }

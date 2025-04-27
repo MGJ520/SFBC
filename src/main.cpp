@@ -1,30 +1,42 @@
-#include <esp_task_wdt.h>
 #include "./Include/project_config.h"
 
 
 void setup() {
     //初始化系统
     SetupCarSystem();
+
     //开始任务
     Start_Task();
-
 }
 
+int ee=0;
 
 void loop() {
 
-    //第一次启动
-    Ready_Time();
+    //初次启动
+    Init_Loop();
 
-    //判断初始化是否成功
-    if (motor_A.motor_status == motor_ready && motor_B.motor_status == motor_ready) {
-        //Foc控制
-        Control_Loop();
-        //刷新Led
-        Led_flash();
-        //串口命令
-        command.run();
-    }
+    //FOC控制
+    Control_Loop();
+
+    //LED显示
+    Led_Loop();
+
+    //串口运行
+    command.run();
+
+//    if (++ee>300)
+//    {
+//        ee=0;
+//        Serial.print("d:");
+//        Serial.print(mpu6050.getAngleX());
+//        Serial.print(",");
+//        Serial.print(mpu6050.getAngleY());
+//        Serial.print(",");
+//        Serial.print(mpu6050.getAngleZ());
+//        Serial.print(",");
+//        Serial.println(mpu6050.temperature);
+//    }
 
 }
 

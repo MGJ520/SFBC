@@ -5,11 +5,27 @@
 
 
 extern enum Car {
-    Dis, Open, Err
+    Disable_Output,//关闭输出
+    Open_Output,//打开输出
+    Error_Unknown,//错误
+    Error_Init,
+    Error_Power,
+    Error_Mpu,
+    Error_Encoder,
 } System_Status;
 
 
-extern boolean Ready;
+// 卡尔曼滤波器
+//extern SimpleKalmanFilter KalmanFilter_mpu;
+
+// 低通滤波器
+extern LowPassFilter lpf_speed;
+extern LowPassFilter lpf_trun;
+extern LowPassFilter lpf_run;
+
+// 偏置参数
+extern float Offset_parameters;
+
 extern const float MAX_ALLOWED_SPEED;
 extern int speed_count;
 extern float Now_Speed;

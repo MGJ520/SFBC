@@ -21,6 +21,7 @@ MPU6050::MPU6050(TwoWire &w, float aC, float gC, float gCX) {
 
 // 初始化MPU6050传感器
 void MPU6050::begin() {
+    Serial.println("[mpu]:初始化MPU6050传感器");
     // 配置MPU6050寄存器
     writeMPU6050(MPU6050_SMPLRT_DIV, 0x00);   // 采样率分频器（默认1kHz）
     writeMPU6050(MPU6050_CONFIG, 0x00);       // 禁用低通滤波器
@@ -70,10 +71,12 @@ void MPU6050::setGyroOffsets(float x, float y, float z) {
 // 自动计算陀螺仪偏移（需保持传感器静止）
 void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delayAfter) {
 
+
     Preferences preferences;  // 创建Preferences对象
     preferences.begin("MPU", false);
     // 读取计数器
     if (preferences.getInt("t", -1) != DEFAULT_TIME) {
+        Serial.println("[mpu]:计算陀螺仪偏移...");
         float calc_time = 20000;
 #ifdef LED_3_GPIO
         pinMode(LED_3_GPIO, OUTPUT);
@@ -121,6 +124,7 @@ void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delay
         digitalWrite(LED_3_GPIO, LOW);
 #endif
     } else {
+        Serial.println("[mpu]:读取到nvs数据");
         gyroXoffset=preferences.getFloat("X", gyroXoffset);  // 将新的计数值写入NVS
         gyroYoffset=preferences.getFloat("Y", gyroYoffset);  // 将新的计数值写入NVS
         gyroZoffset=preferences.getFloat("Z", gyroZoffset);  // 将新的计数值写入NVS
@@ -154,8 +158,8 @@ void  MPU6050::calculateAbsoluteAcceleration() {
     float acc[3] = {accX, accY, accZ};
 
     // 计算绝对加速度
-    absAccX = R[0][0] * acc[0] + R[0][1] * acc[1] + R[0][2] * acc[2];
-    absAccY = R[1][0] * acc[0] + R[1][1] * acc[1] + R[1][2] * acc[2];
+//    absAccX = R[0][0] * acc[0] + R[0][1] * acc[1] + R[0][2] * acc[2];
+//    absAccY = R[1][0] * acc[0] + R[1][1] * acc[1] + R[1][2] * acc[2];
     absAccZ = R[2][0] * acc[0] + R[2][1] * acc[1] + R[2][2] * acc[2];
 }
 

@@ -3,6 +3,9 @@
 
 #include "common_defs.h"  // 包含公共定义
 
+//私人库
+#include <LED_Flash.h>
+
 //外部库文件
 #include <Wire.h>
 #include <Arduino.h>

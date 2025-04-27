@@ -93,11 +93,11 @@ void CheckBatteryVoltageForSafety() {
     // 计算的百分比
     battery_percent = (uint16_t) calculate_battery_percentage(vcc_voltage_out);
 
-
     if (batteryVoltage_raw < 2000) {
         if (++s_count>500)
         {
             s_count=0;
+            Serial.println("[电池-动作]:已触发保护,过载或电池电压低");
             Serial.print("\n[电池]:原始数据: ");
             Serial.println(batteryVoltage_raw);
             Serial.print("[电池]:计算ADC电压: ");
@@ -106,9 +106,8 @@ void CheckBatteryVoltageForSafety() {
             Serial.println(vcc_voltage_out);
             Serial.print("[电池]:计算电池电量: ");
             Serial.println(battery_percent);
-            Serial.println("[电池-动作]:已触发保护,过载或电池电压低");
-        }
 
+        }
         BatteryVoltageNotSafety();
     }
 }
@@ -117,16 +116,12 @@ void CheckBatteryVoltageForSafety() {
 
 [[noreturn]] void ButtonBatteryTask(void *pvParameters) {
     while (true) {
-
         bnt.tick();
-
 #ifdef BUTTON_WIFI_GPIO
         bnt_wifi.tick();
 #endif
-
         // 任务延时5ms
         vTaskDelay(5);
-
         // 检查电池电压是否安全
         CheckBatteryVoltageForSafety();
     }
@@ -141,22 +136,12 @@ boolean PWR_AND_BNT::init(void) {
     digitalWrite(PWM_MPU_GPIO, LOW);
 #endif
 
-
-#ifdef LED_2_GPIO
-    pinMode(LED_2_GPIO, OUTPUT);
-//    digitalWrite(LED_2_GPIO, HIGH);
-#endif
-
-#ifdef LED_3_GPIO
-    pinMode(LED_3_GPIO, OUTPUT);
-    digitalWrite(LED_3_GPIO, HIGH);
-#endif
-
     // 设置电池电压检测引脚为输入模式
     pinMode(BAT_ADC_PIN, INPUT);
 
     // 设置电源使能引脚为输出模式
     pinMode(POWEREN_PIN, OUTPUT);
+
     // 开启平衡车电源
     balanceCarPowerOn();
 
@@ -164,15 +149,13 @@ boolean PWR_AND_BNT::init(void) {
 
     // 初始化蜂鸣器，绑定到BUZZER_PIN引脚
     buzzer.Init(BUZZER_PIN);
-    // 播放开机音效
-    // buzzer.play(powerOnID);
 
     // 重置按钮对象的状态
     bnt.reset();
+
 #ifdef BUTTON_WIFI_GPIO
     bnt_wifi.reset();
 #endif
-
 
     // 为按钮绑定长按事件
     // bnt.attachLongPressStart(balanceCarPowerOff);
