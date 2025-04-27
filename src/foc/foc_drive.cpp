@@ -9,13 +9,16 @@
 
 
 
-MagneticSensorI2C sensor_A = MagneticSensorI2C(AS5600_I2C);
-MagneticSensorI2C sensor_B = MagneticSensorI2C(AS5600_I2C);
-
-
-
 TwoWire I2C_A = TwoWire(1); // I2C总线A，编号为1
 TwoWire I2C_B = TwoWire(0); // I2C总线B，编号为0
+
+
+BLDCMotor motor_A = BLDCMotor(7); // 电机A
+BLDCMotor motor_B = BLDCMotor(7); // 电机B
+
+
+MagneticSensorI2C sensor_A = MagneticSensorI2C(AS5600_I2C);
+MagneticSensorI2C sensor_B = MagneticSensorI2C(AS5600_I2C);
 
 
 #ifdef MPU_I2C
@@ -25,12 +28,11 @@ MPU6050 mpu6050(I2C_B);
 #endif
 
 
-BLDCMotor motor_A = BLDCMotor(7); // 电机A
-BLDCMotor motor_B = BLDCMotor(7); // 电机B
-
 
 BLDCDriver3PWM driver_A = BLDCDriver3PWM(PWM_A_1_GPIO, PWM_A_2_GPIO, PWM_A_3_GPIO); // 电机A的驱动器
 BLDCDriver3PWM driver_B = BLDCDriver3PWM(PWM_B_1_GPIO, PWM_B_2_GPIO, PWM_B_3_GPIO); // 电机B的驱动器
+
+
 
 // 用于检测电机电流，参数分别为：电阻值、增益、电流检测引脚、电压检测引脚、备用引脚
 LowsideCurrentSense cs_A = LowsideCurrentSense(0.005f, 50.0f, ADC_A_1_GPIO, ADC_A_2_GPIO, _NC); // 电机A的电流检测
@@ -39,9 +41,11 @@ LowsideCurrentSense cs_B = LowsideCurrentSense(0.005f, 50.0f, ADC_B_1_GPIO, ADC_
 
 Commander command = Commander(Serial);
 
+
 void onTarget(char *cmd) {
     command.scalar(&Offset_parameters, cmd);
 }
+
 
 //void on_SP(char *cmd) {
 //    command.scalar(&pid_speed.P, cmd);
@@ -74,6 +78,7 @@ void MotorOpen() {
 #endif
 }
 
+
 void MotorClose() {
     motor_A.disable();
     motor_B.disable();
@@ -83,6 +88,8 @@ void MotorClose() {
     R_LED.blink();
 #endif
 }
+
+
 
 void Foc_Parameters_init() {
     //==============================================================================
@@ -108,6 +115,8 @@ void Foc_Parameters_init() {
     motor_A.current_limit = 6.5f;
 
     motor_A.KV_rating = 700;
+
+    motor_A.phase_resistance = 0.1f;
 
     motor_A.sensor_direction = CW;
 
@@ -143,6 +152,8 @@ void Foc_Parameters_init() {
     motor_B.current_limit = 6.5f;
 
     motor_B.KV_rating = 700;
+    motor_B.phase_resistance = 0.1f;
+
 
     motor_B.sensor_direction = CW;
 

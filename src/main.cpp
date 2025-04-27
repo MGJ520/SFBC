@@ -9,7 +9,7 @@ void setup() {
     Start_Task();
 }
 
-int ee=0;
+int mpu_count=0;
 
 void loop() {
 
@@ -25,10 +25,10 @@ void loop() {
     //串口运行
     command.run();
 
-//    if (++ee>300)
+//    if (++mpu_count > 200)
 //    {
-//        ee=0;
-//        Serial.print("d:");
+//        mpu_count=0;
+//        Serial.print("mpu:");
 //        Serial.print(mpu6050.getAngleX());
 //        Serial.print(",");
 //        Serial.print(mpu6050.getAngleY());

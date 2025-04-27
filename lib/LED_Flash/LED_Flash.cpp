@@ -12,12 +12,15 @@ void LED::begin() {
     off();
 }
 
+
+//关闭
 void LED::off() {
     _mode = Mode::Off;
     digitalWrite(_pin, LOW);
     _ledState = false;
 }
 
+//打开
 void LED::on() {
     _mode = Mode::On;
     digitalWrite(_pin, HIGH);

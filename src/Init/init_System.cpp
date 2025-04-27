@@ -46,6 +46,7 @@ void SetupCarSystem() {
     //FOC参数初始化
     Foc_Parameters_init();
 
+    //PID参数初始化
     PID_parameters_Init();
 
 }

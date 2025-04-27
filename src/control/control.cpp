@@ -8,15 +8,11 @@
 //// e_mea: 测量不确定性   e_est: 估计不确定性 q: 过程噪声
 SimpleKalmanFilter KalmanFilter_mpu(0.2, 0.2, 0.20);
 
+
 //速度滤波
 LowPassFilter lpf_speed = LowPassFilter(0.02);
 LowPassFilter lpf_speed_error = LowPassFilter(0.02);
 LowPassFilter lpf_ag = LowPassFilter(0.02);
-
-
-
-LowPassFilter lpf_out01 = LowPassFilter(0.05);
-
 
 //速度滤波
 LowPassFilter lpf_trun = LowPassFilter(0.02);
@@ -30,21 +26,20 @@ float Offset_parameters = 2.45f;
 
 const float MAX_ALLOWED_SPEED = 100.0f;
 
-int speed_count = 5;
-
-float Now_Speed_Erorr = 0;
 
 float Now_Speed = 0;
 float Now_Pitch = 0;
+float Now_Speed_Erorr = 0;
+
 
 float C_Speed = 0;
 float C_Turn = 0;
 
-float PID_Speed_Out = 0;
-float PID_Pitch_Out = 0;
-
 float Target_torque_A = 0;
 float Target_torque_B = 0;
+
+
+int speed_count = 5;
 
 Car System_Status = Open_Output;
 
@@ -64,7 +59,7 @@ void AbnormalSpinDetect() {
     }
 
     if (!xboxController.isConnected()) {
-        if (mpu6050.absAccZ > 2.0f && System_Status == Open_Output &&
+        if (mpu6050.absAccZ > 1.55f && System_Status == Open_Output &&
             abs(Now_Speed) < 1 && abs(Now_Pitch) < 5) {
             Serial.println("[系统-动作]:小车提起(加速度),关闭输出");
             MotorClose();
@@ -128,7 +123,7 @@ void Control_Loop() {
     motor_B.loopFOC();
 
     motor_A.move(Target_torque_A);
-    motor_B.move(Target_torque_B*-1);
+    motor_B.move(Target_torque_B*(-1));
 
     //===============================传感器==============================
 
@@ -145,28 +140,38 @@ void Control_Loop() {
     Now_Speed = lpf_speed(-(motor_A.shaft_velocity + motor_B.shaft_velocity * (-1)) / 2);
 
     Now_Speed_Erorr=lpf_speed_error(motor_A.shaft_velocity + motor_B.shaft_velocity);
+
+
+
+    //===============================PID==============================
     //PID速度环
     if (++speed_count >=2) {
         speed_count = 0;
         // 小车速度环
-        PID_Adjust(&SpeedPID, 0.0f, Now_Speed-C_Speed*60);
+        PID_Adjust(&SpeedPID, 0.0f, (Now_Speed-C_Speed*60));
 
         // 小车旋转环
-        PID_Adjust(&TurnPID,-C_Turn*55, Now_Speed_Erorr);
+        PID_Adjust(&TurnPID,(C_Turn*-55), Now_Speed_Erorr);
 
         //计算加速度
         mpu6050.calculateAbsoluteAcceleration();
     }
 
+    //小车直立环
     PID_Adjust_T(&UprightPID, 0.0f, (Now_Pitch + Offset_parameters), lpf_ag(mpu6050.getGyroXFV())+Offset_parameters);
 
-    Target_torque_A = UprightPID.PID_Out + SpeedPID.PID_Out + TurnPID.PID_Out;  // 输出电机速度控制量
-    Target_torque_B = UprightPID.PID_Out + SpeedPID.PID_Out - TurnPID.PID_Out;  // 输出电机速度控制量
+
+    // 输出电机速度控制量
+    Target_torque_A = UprightPID.PID_Out + SpeedPID.PID_Out + TurnPID.PID_Out;
+    Target_torque_B = UprightPID.PID_Out + SpeedPID.PID_Out - TurnPID.PID_Out;
+
 
 
     //============================保护=================================
+    //小车离地检查
     AbnormalSpinDetect();
 
+    //小车着地检查
     LandingDetect();
 
 
