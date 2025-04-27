@@ -18,10 +18,16 @@ XboxSeriesXControllerESP32_asukiaaa::Core xboxController;
         vTaskDelay(pdMS_TO_TICKS(1)); // 延时1000ms
 
         if (xboxController.isConnected()) {
+            Acc_Protect= false;
             if (!xboxController.isWaitingForFirstNotification()) {
 
-                C_Speed = ((float) xboxController.xboxNotif.joyLVert / (float) joystickMax) - 0.5f;
-                C_Turn = ((float) xboxController.xboxNotif.joyRHori / (float) joystickMax) - 0.5f;
+                //控制接口
+                Control_interface(
+                        ((float) xboxController.xboxNotif.joyLVert / (float) joystickMax) - 0.5f,
+                        ((float) xboxController.xboxNotif.joyRHori / (float) joystickMax) - 0.5f,
+                        0.1
+                );
+
                 //打开保护
                 if ((xboxController.xboxNotif.btnB) && System_Status == Open_Output) {
                     MotorClose();
@@ -40,12 +46,12 @@ XboxSeriesXControllerESP32_asukiaaa::Core xboxController;
                 }
             }
 
-            C_Speed = lpf_run(C_Speed);
-            C_Turn = lpf_trun(C_Turn);
+
 #ifdef LED_1_GPIO
             B_LED.on();
 #endif
         } else {
+            Acc_Protect= true;
 #ifdef LED_1_GPIO
             B_LED.off();
 #endif

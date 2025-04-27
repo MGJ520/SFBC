@@ -39,7 +39,7 @@ LowsideCurrentSense::LowsideCurrentSense(float _mVpA, int _pinA, int _pinB, int 
 int LowsideCurrentSense::init() {
     // 检查是否已经链接了驱动器对象
     if (driver == nullptr) {
-        SIMPLEFOC_DEBUG("CUR: Driver not linked!"); // 打印调试信息：未链接驱动器
+        SIMPLEFOC_DEBUG("CUR: 未链接驱动器!"); // 打印调试信息：未链接驱动器
         return 0; // 返回0表示初始化失败
     }
 
@@ -57,13 +57,13 @@ int LowsideCurrentSense::init() {
 
     if (offset_flag)
     {
-        SIMPLEFOC_DEBUG("CUR:calibrateOffsets"); // 打印调试信息：开始校准偏移量
+        SIMPLEFOC_DEBUG("CUR: 开始校准电流传感器..."); // 打印调试信息：开始校准偏移量
         calibrateOffsets();
         offset_flag= false;
 
     } else
     {
-        SIMPLEFOC_DEBUG("CUR:Skip Offset"); // 打印调试信息：初始化成功
+        SIMPLEFOC_DEBUG("CUR: 跳过电流传感器校准"); // 打印调试信息：初始化成功
     }
 
 
@@ -72,7 +72,7 @@ int LowsideCurrentSense::init() {
     initialized = (params != SIMPLEFOC_CURRENT_SENSE_INIT_FAILED);
 
     // 返回成功标志
-    SIMPLEFOC_DEBUG("CUR: CurrentSense Success!"); // 打印调试信息：初始化成功
+    SIMPLEFOC_DEBUG("CUR: 电流传感器初始化成功!"); // 打印调试信息：初始化成功
     return 1;
 }
 

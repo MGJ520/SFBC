@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32 摇杆控制</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        #joystick-container {
+            width: 300px;
+            height: 300px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            margin: 50px auto;
+            position: relative;
+            touch-action: none;
+        }
+
+        #data {
+            margin-bottom: 100px;
+        }
+
+        #joystick {
+            width: 60px;
+            height: 60px;
+            background: #4CAF50;
+            border-radius: 50%;
+            position: absolute;
+            left: 120px;
+            top: 120px;
+            transition: transform 0.1s linear; /* 添加基础过渡效果 */
+        }
+
+        .status-box {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        #connection-status {
+            background-color: #ff4444;
+            color: white;
+        }
+
+        #latency {
+            margin-top: 100px;
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+
+<div id="latency" class="status-box">延迟: -- ms</div>
+
+<div id="connection-status" class="status-box">状态: 断开连接</div>
+
+<div id="data" class="status-box">X: 0.00, Y: 0.00</div>
+<div id="joystick-container">
+    <div id="joystick"></div>
+</div>
+
+
+<script>
+    const joystick = document.getElementById('joystick');
+    const container = document.getElementById('joystick-container');
+    const dataDiv = document.getElementById('data');
+    const statusDiv = document.getElementById('connection-status');
+    const latencyDiv = document.getElementById('latency');
+    let ws;
+    let pingInterval;
+    let lastPingTime;
+
+    function updateConnectionStatus(status, isError) {
+        statusDiv.textContent = `状态: ${status}`;
+        statusDiv.style.backgroundColor = isError ? '#ff4444' : '#4CAF50';
+    }
+
+    function connectWebSocket() {
+        ws = new WebSocket('ws://' + window.location.hostname + '/ws');
+
+        ws.onopen = () => {
+            console.log('WebSocket连接已建立');
+            updateConnectionStatus('已连接', false);
+            pingInterval = setInterval(sendPing, 1000);
+        };
+
+        ws.onerror = (error) => {
+            console.log('WebSocket错误:', error);
+            updateConnectionStatus('连接错误', true);
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket断开连接');
+            updateConnectionStatus('断开连接', true);
+            clearInterval(pingInterval);
+            setTimeout(connectWebSocket, 3000);
+            latencyDiv.textContent = `延迟: ~ ms`;
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'pong') {
+                const latency = Date.now() - data.clientTime;
+                latencyDiv.textContent = `延迟: ${latency} ms`;
+            }
+        };
+    }
+
+    function sendPing() {
+        if (ws.readyState === WebSocket.OPEN) {
+            const pingData = {
+                type: 'ping',
+                clientTime: Date.now()
+            };
+            ws.send(JSON.stringify(pingData));
+        }
+    }
+
+    function initJoystick() {
+        let isDragging = false;
+        const rect = container.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const maxDistance = 100;
+        let currentX = 0;
+        let currentY = 0;
+        let animationFrameId = null;
+
+        function updatePosition(clientX, clientY) {
+            const rect = container.getBoundingClientRect();
+            const x = clientX - rect.left - centerX;
+            const y = clientY - rect.top - centerY;
+
+            const distance = Math.min(maxDistance, Math.sqrt(x * x + y * y));
+            const angle = Math.atan2(y, x);
+
+            const normalizedX = (distance * Math.cos(angle)) / maxDistance;
+            const normalizedY = (distance * Math.sin(angle)) / maxDistance;
+
+            currentX = normalizedX;
+            currentY = normalizedY;
+
+            joystick.style.transform = `translate(
+                    ${normalizedX * maxDistance}px,
+                    ${normalizedY * maxDistance}px
+                )`;
+
+            dataDiv.textContent = `X: ${normalizedX.toFixed(2)}, Y: ${normalizedY.toFixed(2)}`;
+
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    x: normalizedX,
+                    y: normalizedY
+                }));
+            }
+        }
+
+        function animateToCenter() {
+            const startTime = Date.now();
+            const duration = 200; // 动画持续时间300ms
+            const startX = currentX;
+            const startY = currentY;
+
+            function animate() {
+                const progress = Math.min(1, (Date.now() - startTime) / duration);
+
+                const currentPosX = startX * (1 - progress);
+                const currentPosY = startY * (1 - progress);
+
+                joystick.style.transform = `translate(
+                        ${currentPosX * maxDistance}px,
+                        ${currentPosY * maxDistance}px
+                    )`;
+
+                dataDiv.textContent = `X: ${currentPosX.toFixed(2)}, Y: ${currentPosY.toFixed(2)}`;
+
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        x: currentPosX,
+                        y: currentPosY
+                    }));
+                }
+
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
+                } else {
+                    // 确保最终位置准确
+                    joystick.style.transform = 'translate(0, 0)';
+                    dataDiv.textContent = 'X: 0.00, Y: 0.00';
+                    ws.send(JSON.stringify({x: 0, y: 0}));
+                    animationFrameId = null;
+                }
+            }
+
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        // 触摸事件处理
+        container.addEventListener('touchstart', (e) => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            isDragging = true;
+            updatePosition(e.touches[0].clientX, e.touches[0].clientY);
+            e.preventDefault();
+        });
+
+        container.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                updatePosition(e.touches[0].clientX, e.touches[0].clientY);
+                e.preventDefault();
+            }
+        });
+
+        container.addEventListener('touchend', () => {
+            if (isDragging) {
+                isDragging = false;
+                animateToCenter();
+            }
+        });
+
+        // 鼠标事件处理
+        container.addEventListener('mousedown', (e) => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            isDragging = true;
+            updatePosition(e.clientX, e.clientY);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                updatePosition(e.clientX, e.clientY);
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                animateToCenter();
+            }
+        });
+    }
+
+    window.onload = () => {
+        connectWebSocket();
+        initJoystick();
+    };
+</script>
+</body>
+</html>

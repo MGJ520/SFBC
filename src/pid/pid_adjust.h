@@ -6,7 +6,7 @@
 #define FOC_CODE_PID_ADJUST_H
 
 
-typedef struct _PIDFloat_Obj_
+typedef struct PIDFloat_Obj
 {
     volatile float Kp;
     volatile float Ki;

@@ -22,11 +22,16 @@
 
 class MPU6050 {
 public:
+
+    bool Is_Connect= false;
+
     MPU6050(TwoWire &w);
 
     MPU6050(TwoWire &w, float aC, float gC, float gCX);
 
-    void begin();
+    bool begin();
+
+    bool checkMPU6050();
 
     void setGyroOffsets(float x, float y, float z);
 
@@ -63,11 +68,23 @@ public:
     };
 
     float getGyroXFV() {
+        // 计算陀螺仪 X 轴的滤波值
+        // 使用了加权平均滤波算法（也称为一阶低通滤波器）
+        // 公式：gyroXFV = α * gyroX + (1 - α) * gyroXFV + β * preGyroX
+        // 其中：
+        // - gyroX 是当前时刻的陀螺仪 X 轴数据
+        // - gyroXFV 是滤波后的陀螺仪 X 轴数据
+        // - preGyroX 是上一次的陀螺仪 X 轴数据
+        // - gyroCoefX (α) 是当前滤波系数，决定了当前数据的权重
+        // - preGyroCoefX (β) 是上一次滤波系数，用于进一步调整滤波效果
         gyroXFV = gyroCoefX * gyroX + (1 - gyroCoefX) * gyroXFV + preGyroCoefX * preGyroX;
-        // gyroXFV = gyroCoefX * gyroX + (1 - gyroCoefX) * preGyroX;
+
+        // 更新 preGyroX 为当前的 gyroX，用于下一次计算
         preGyroX = gyroX;
+
+        // 返回滤波后的陀螺仪 X 轴值
         return gyroXFV;
-    };
+    }
 
     float getAccX() {
         return accX;
@@ -107,7 +124,7 @@ public:
         return gyroZoffset;
     };
 
-    void update();
+    bool update();
 
     float getAccAngleX() {
         return angleAccX;

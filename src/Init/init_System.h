@@ -5,7 +5,9 @@
 
 #include "include/precompiled.h"
 
-extern boolean Ready;
+
+
+extern bool Ready;
 extern bool systemInitialized;
 
 void SetupCarSystem();

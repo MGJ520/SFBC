@@ -9,8 +9,6 @@
 #include "mpu/MPU6050.h"
 
 
-
-
 #define PID_CS_P          0.3
 #define PID_CS_I          0.1
 #define PID_CS_D          0.0
@@ -22,6 +20,12 @@
 
 
 
+
+#define AS5600_ADDR       0x36    // AS5600 的 I2C 地址
+#define CHIP_ID_REG       0x0F    // 芯片 ID 寄存器地址
+
+
+
 extern Commander command;
 
 
@@ -29,9 +33,7 @@ extern Commander command;
 extern MagneticSensorI2C sensor_A;
 extern MagneticSensorI2C sensor_B;
 
-// I2C总线
-extern TwoWire I2C_A;
-extern TwoWire I2C_B;
+
 
 // MPU6050
 extern MPU6050 mpu6050;
@@ -54,7 +56,12 @@ void MotorClose();
 void Foc_Parameters_init();
 void onTarget(char *cmd);
 
+bool check_encoder();
+
+
 void Foc_A_Initialize(void *pvParameters);
 void Foc_B_Initialize(void *pvParameters);
+
+
 
 #endif //FOC_CODE_FOC_DRIVE_H

@@ -3,6 +3,7 @@
 #include "buzzer/BuzzerSound.h"
 #include "OneButton.h"
 #include "led/led.h"
+#include "Init/init_System.h"
 
 // 定义一个OneButton对象，用于处理按钮事件，绑定到BUTTON_PIN引脚，并启用消抖功能
 OneButton bnt(BUTTON_PIN, true);
@@ -99,19 +100,20 @@ void CheckBatteryVoltageForSafety() {
     battery_percent = (uint16_t) calculate_battery_percentage(vcc_voltage_out);
 
     if (batteryVoltage_raw < 2000) {
-        if (++s_count>500)
+        if (++s_count>600)
         {
             s_count=0;
             Serial.println("[电池-动作]:已触发保护,过载或电池电压低");
-            Serial.print("\n[电池]:原始数据: ");
-            Serial.println(batteryVoltage_raw);
-            Serial.print("[电池]:计算ADC电压: ");
-            Serial.println(adc_voltage_out);
-            Serial.print("[电池]:计算VCC电压: ");
-            Serial.println(vcc_voltage_out);
-            Serial.print("[电池]:计算电池电量: ");
-            Serial.println(battery_percent);
-
+            if (systemInitialized)
+            {
+                Serial.print("\n[电池]:原始数据: ");
+                Serial.println(batteryVoltage_raw);
+                Serial.print("[电池]:计算ADC电压: ");
+                Serial.println(adc_voltage_out);
+                Serial.print("[电池]:计算VCC电压: ");
+                Serial.println(vcc_voltage_out);
+                Serial.printf("[电池]:计算电池电量:%d%%\n",battery_percent);
+            }
         }
         BatteryVoltageNotSafety();
     }
@@ -181,22 +183,20 @@ boolean PWR_AND_BNT::init(void) {
     Serial.println(batteryVoltage_raw);
     Serial.print("[电池]:计算VCC电压: ");
     Serial.println(vcc_voltage_out);
-    Serial.print("[电池]:计算电池电量: ");
-    Serial.println(battery_percent);
+    Serial.printf("[电池]:计算电池电量:%d%%\n",battery_percent);
 
     delay(100);
 
     if (vcc_voltage_out < 0 || vcc_voltage_out > 13) {
-        Serial.print("[电池]:电压范围错误");
+        Serial.println("[电池-错误]:电压范围错误");
         return false;
     }
 
     if (vcc_voltage_out < 6.2) {
-        Serial.print("[电池]:低电压");
+        Serial.println("[电池-错误]:低电压");
         return false;
     }
 
-    Serial.print("[电池]:电池电压正常");
 
     //返回检查结果
     return true;

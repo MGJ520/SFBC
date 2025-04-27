@@ -69,11 +69,11 @@ void BLDCMotor::init() {
     // 检查驱动器是否已初始化
     if (!driver || !driver->initialized) {
         motor_status = FOCMotorStatus::motor_init_failed; // 设置电机状态为初始化失败
-        SIMPLEFOC_DEBUG("MOT: Init not possible, driver not initialized"); // 调试信息：驱动器未初始化，无法初始化电机
+        SIMPLEFOC_DEBUG("MOT: 驱动器未初始化，无法初始化电机"); // 调试信息：驱动器未初始化，无法初始化电机
         return;
     }
     motor_status = FOCMotorStatus::motor_initializing; // 设置电机状态为正在初始化
-    SIMPLEFOC_DEBUG("MOT: Init"); // 调试信息：开始初始化电机
+    SIMPLEFOC_DEBUG("MOT: 开始初始化电机"); // 调试信息：开始初始化电机
 
     // 检查电压限制配置是否合理
     if(voltage_limit > driver->voltage_limit)
@@ -106,7 +106,7 @@ void BLDCMotor::init() {
 
     _delay(200); // 延时500毫秒
     // 启动电机
-    SIMPLEFOC_DEBUG("MOT: Enable driver."); // 调试信息：启用驱动器
+    SIMPLEFOC_DEBUG("MOT: 启用驱动器."); // 调试信息：启用驱动器
     enable(); // 启用电机驱动器
     _delay(200); // 延时500毫秒
     motor_status = FOCMotorStatus::motor_uncalibrated; // 设置电机状态为未校准
@@ -152,7 +152,7 @@ int BLDCMotor::initFOC() {
         shaft_angle = shaftAngle(); // 获取转轴角度
     } else {
         exit_flag = 0; // 如果没有传感器，则无法进行 FOC，将退出标志设置为 0
-        SIMPLEFOC_DEBUG("MOT: No sensor."); // 调试信息：没有传感器
+        SIMPLEFOC_DEBUG("MOT: 没有编码器."); // 调试信息：没有传感器
     }
 
     // 对电流传感器进行对齐 - 可以跳过
@@ -163,21 +163,21 @@ int BLDCMotor::initFOC() {
         if (current_sense) { // 如果有电流检测
             if (!current_sense->initialized) { // 如果电流检测未初始化
                 motor_status = FOCMotorStatus::motor_calib_failed; // 设置电机状态为校准失败
-                SIMPLEFOC_DEBUG("MOT: Init FOC error, current sense not initialized"); // 调试信息：电流检测未初始化
+                SIMPLEFOC_DEBUG("MOT: 电流检测未初始化"); // 调试信息：电流检测未初始化
                 exit_flag = 0; // 将退出标志设置为 0
             } else {
                 exit_flag *= alignCurrentSense(); // 调用 alignCurrentSense 函数进行电流检测对齐，并将返回值与 exit_flag 相乘
             }
         } else {
-            SIMPLEFOC_DEBUG("MOT: No current sense."); // 调试信息：没有电流检测
+            SIMPLEFOC_DEBUG("MOT: 没有电流传感器."); // 调试信息：没有电流检测
         }
     }
 
     if (exit_flag) { // 如果所有对齐操作成功
-        SIMPLEFOC_DEBUG("MOT: Ready."); // 调试信息：电机准备就绪
+        SIMPLEFOC_DEBUG("MOT: 电机准备就绪."); // 调试信息：电机准备就绪
         motor_status = FOCMotorStatus::motor_ready; // 设置电机状态为准备就绪
     } else {
-        SIMPLEFOC_DEBUG("MOT: Init FOC failed."); // 调试信息：FOC 初始化失败
+        SIMPLEFOC_DEBUG("MOT: FOC初始化失败."); // 调试信息：FOC 初始化失败
         motor_status = FOCMotorStatus::motor_calib_failed; // 设置电机状态为校准失败
         disable(); // 禁用电机
     }
@@ -189,17 +189,17 @@ int BLDCMotor::initFOC() {
 int BLDCMotor::alignCurrentSense() {
     int exit_flag = 1; // 初始化退出标志为 1（表示成功）
 
-    SIMPLEFOC_DEBUG("MOT: Align current sense."); // 调试信息：开始校准电流检测
+    SIMPLEFOC_DEBUG("MOT: 准备对齐相电流.");
 
     // 对齐电流检测和驱动器
     exit_flag = current_sense->driverAlign(voltage_sensor_align); // 调用电流检测的 driverAlign 方法进行对齐
     if (!exit_flag) {
         // 电流检测对齐失败，可能是相位未测量或连接不良
-        SIMPLEFOC_DEBUG("MOT: Align error!"); // 调试信息：对齐失败
+        SIMPLEFOC_DEBUG("MOT: 相电流对齐失败!"); // 调试信息：对齐失败
         exit_flag = 0; // 设置退出标志为 0（失败）
     } else {
         // 输出对齐状态标志
-        SIMPLEFOC_DEBUG("MOT: Success: ", exit_flag); // 调试信息：对齐成功
+        SIMPLEFOC_DEBUG("MOT: 对齐成功: ", exit_flag); // 调试信息：对齐成功
     }
 
     return exit_flag > 0; // 返回对齐结果（如果 exit_flag 大于 0，则表示成功）
@@ -207,7 +207,7 @@ int BLDCMotor::alignCurrentSense() {
 // 编码器对齐到电机的电气零角度
 int BLDCMotor::alignSensor() {
     int exit_flag = 1; // 初始化退出标志为 1（表示成功）
-    SIMPLEFOC_DEBUG("MOT: Align sensor."); // 调试信息：开始对齐传感器
+    SIMPLEFOC_DEBUG("MOT: 准备对齐编码器..."); // 调试信息：开始对齐传感器
 
     // 检查传感器是否需要搜索绝对零点
     if (sensor->needsSearch())
@@ -243,23 +243,24 @@ int BLDCMotor::alignSensor() {
         // 确定传感器的运动方向
         float moved = fabs(mid_angle - end_angle); // 计算角度变化
         if (moved < MIN_ANGLE_DETECT_MOVEMENT) { // 如果角度变化小于最小可检测值
-            SIMPLEFOC_DEBUG("MOT: Failed to notice movement"); // 调试信息：未检测到运动
+            SIMPLEFOC_DEBUG("MOT: 未检测到电机运动"); // 调试信息：未检测到运动
             return 0; // 校准失败
         } else if (mid_angle < end_angle) {
-            SIMPLEFOC_DEBUG("MOT: sensor_direction==CCW"); // 调试信息：传感器方向为逆时针
+            SIMPLEFOC_DEBUG("MOT: 电机方向为--CCW"); // 调试信息：传感器方向为逆时针
             sensor_direction = Direction::CCW; // 设置传感器方向为逆时针
         } else {
-            SIMPLEFOC_DEBUG("MOT: sensor_direction==CW"); // 调试信息：传感器方向为顺时针
+            SIMPLEFOC_DEBUG("MOT: 电机方向为--CW"); // 调试信息：传感器方向为顺时针
             sensor_direction = Direction::CW; // 设置传感器方向为顺时针
         }
         // 检查极对数
         if (fabs(moved * pole_pairs - _2PI) > 0.5f) { // 0.5f 是一个任意值，可以根据需要调整
-            SIMPLEFOC_DEBUG("MOT: PP check: fail - estimated pp: ", _2PI / moved); // 调试信息：极对数校验失败
+
+            SIMPLEFOC_DEBUG("PP 检查失败 - 预估的极对数: ", _2PI / moved); // 调试信息：极对数校验失败
         } else {
-            SIMPLEFOC_DEBUG("MOT: PP check: OK!"); // 调试信息：极对数校验成功
+            SIMPLEFOC_DEBUG("MOT: 极对数校验成功!"); // 调试信息：极对数校验成功
         }
     } else {
-        SIMPLEFOC_DEBUG("MOT: Skip dir calib."); // 调试信息：跳过方向校准
+        SIMPLEFOC_DEBUG("MOT: 跳过编码器方向校准."); // 调试信息：跳过方向校准
     }
 
     // 如果电气零角度未知
@@ -276,23 +277,23 @@ int BLDCMotor::alignSensor() {
         // zero_electric_angle =  _normalizeAngle(_electricalAngle(sensor_direction*sensor->getAngle(), pole_pairs));
         _delay(20); // 延时 20 毫秒
         if (monitor_port) {
-            SIMPLEFOC_DEBUG("MOT: Zero elec. angle: ", zero_electric_angle); // 调试信息：电气零角度
+            SIMPLEFOC_DEBUG("MOT: 零点电角度:", zero_electric_angle); // 调试信息：电气零角度
         }
         // 停止所有电压
         setPhaseVoltage(0, 0, 0);
         _delay(150); // 延时 200 毫秒
     } else {
-        SIMPLEFOC_DEBUG("MOT: Skip offset calib."); // 调试信息：跳过偏移校准
+        SIMPLEFOC_DEBUG("MOT: 跳过零点电角度校准."); // 调试信息：跳过偏移校准
     }
     return exit_flag; // 返回退出标志
 }
 
-// Encoder alignment the absolute zero angle
-// - to the index
+// 编码器对齐绝对零角度
+// - 到索引位置
 int BLDCMotor::absoluteZeroSearch() {
   // sensor precision: this is all ok, as the search happens near the 0-angle, where the precision
   //                    of float is sufficient.
-  SIMPLEFOC_DEBUG("MOT: Index search...");
+  SIMPLEFOC_DEBUG("MOT: 正在探测位置...");
   // search the absolute zero with small velocity
   float limit_vel = velocity_limit;
   float limit_volt = voltage_limit;

@@ -14,6 +14,8 @@
 
 #include "foc/foc_drive.h"
 
+#include "I2C/I2C_Manage.h"
+
 #include "handle/xbox_controls.h"
 
 #include "Init/init_System.h"
@@ -28,5 +30,6 @@
 
 #include "task/freertos_task.h"
 
+#include "web/web.h"
 
 #endif //FOC_CODE_PROJECT_CONFIG_H

@@ -176,6 +176,8 @@ class FOCMotor
     float current_limit; //!< 电流限制变量 - 全局限制
     float velocity_limit; //!< 速度限制变量 - 全局限制
 
+
+
 // 电机状态变量
     int8_t enabled = 0; //!< 电机使能标志（0 = 禁用，1 = 使能）
     FOCMotorStatus motor_status = FOCMotorStatus::motor_uninitialized; //!< 电机状态
@@ -218,14 +220,13 @@ class FOCMotor
      * significantly slowing the execution down!!!!
      */
     void monitor();
-
-    unsigned int monitor_downsample = DEF_MON_DOWNSMAPLE; //!< show monitor outputs each monitor_downsample calls
-    char monitor_start_char = '\0'; //!< monitor starting character 
-    char monitor_end_char = '\0'; //!< monitor outputs ending character 
-    char monitor_separator = '\t'; //!< monitor outputs separation character
-    unsigned int  monitor_decimals = 4; //!< monitor outputs decimal places
-    // initial monitoring will display target, voltage, velocity and angle
-    uint8_t monitor_variables = _MON_TARGET | _MON_VOLT_Q | _MON_VEL | _MON_ANGLE; //!< Bit array holding the map of variables the user wants to monitor
+    unsigned int monitor_downsample = DEF_MON_DOWNSMAPLE; //!< 每调用 monitor_downsample 次才显示一次监控输出
+    char monitor_start_char = '\0'; //!< 监控输出的起始字符
+    char monitor_end_char = '\0'; //!< 监控输出的结束字符
+    char monitor_separator = '\t'; //!< 监控输出的分隔符
+    unsigned int monitor_decimals = 4; //!< 监控输出的小数位数
+    // 初始监控将显示目标值、电压、速度和角度
+    uint8_t monitor_variables = _MON_TARGET | _MON_VOLT_Q | _MON_VEL | _MON_ANGLE; //!< 位数组，用于存储用户希望监控的变量映射
 
     /** 
       * Sensor link:

@@ -19,9 +19,44 @@ MPU6050::MPU6050(TwoWire &w, float aC, float gC, float gCX) {
     gyroCoefX = gCX; // 自定义X轴特殊系数
 }
 
+
+bool MPU6050::checkMPU6050() {
+    // 发送 WHO_AM_I 寄存器地址
+    wire->beginTransmission(MPU6050_ADDR);
+    wire->write(MPU6050_WHO_AM_I); // WHO_AM_I 寄存器地址
+    if (wire->endTransmission() != 0) {
+        // 如果传输失败，返回 false
+        return false;
+    }
+    // 请求数据
+    wire->requestFrom(MPU6050_ADDR, 1);
+    if (wire->available() == 1) {
+        byte result = wire->read();
+        if (result == 0x68 || result == 0x69) {
+            return true; // MPU6050 连接成功
+        }
+    }
+    return false; // MPU6050 未连接
+}
+
 // 初始化MPU6050传感器
-void MPU6050::begin() {
-    Serial.println("[mpu]:初始化MPU6050传感器");
+bool MPU6050::begin() {
+
+#if MPU_I2C==1
+    Serial.println("[MPU]:初始化MPU6050传感器,MPU I2C通道为A");
+#elif MPU_I2C==2
+    Serial.println("[MPU]:初始化MPU6050传感器,MPU I2C通道为B");
+#endif
+
+    if (checkMPU6050()) {
+        Serial.println("[MPU]:MPU6050连接成功!");
+        Is_Connect = true;
+    } else {
+        Serial.println("[MPU]:MPU6050连接失败!");
+        Is_Connect = false;
+        return false;
+    }
+
     // 配置MPU6050寄存器
     writeMPU6050(MPU6050_SMPLRT_DIV, 0x00);   // 采样率分频器（默认1kHz）
     writeMPU6050(MPU6050_CONFIG, 0x00);       // 禁用低通滤波器
@@ -42,6 +77,7 @@ void MPU6050::begin() {
 
     //计算偏移
     calcGyroOffsets();
+    return true;
 }
 
 // 写入MPU6050寄存器
@@ -57,7 +93,7 @@ byte MPU6050::readMPU6050(byte reg) {
     wire->beginTransmission(MPU6050_ADDR);
     wire->write(reg);                // 指定寄存器地址
     wire->endTransmission(true);     // 保持连接
-    wire->requestFrom(MPU6050_ADDR, 1); // 请求1字节数据
+    wire->requestFrom(MPU6050_ADDR, 1);
     return wire->read();             // 返回读取值
 }
 
@@ -71,12 +107,11 @@ void MPU6050::setGyroOffsets(float x, float y, float z) {
 // 自动计算陀螺仪偏移（需保持传感器静止）
 void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delayAfter) {
 
-
     Preferences preferences;  // 创建Preferences对象
     preferences.begin("MPU", false);
     // 读取计数器
     if (preferences.getInt("t", -1) != DEFAULT_TIME) {
-        Serial.println("[mpu]:计算陀螺仪偏移...");
+        Serial.println("[MPU]:开始校准陀螺仪偏移,请不要移动小车...");
         float calc_time = 20000;
 #ifdef LED_3_GPIO
         pinMode(LED_3_GPIO, OUTPUT);
@@ -112,10 +147,10 @@ void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delay
         gyroYoffset = y / calc_time;
         gyroZoffset = z / calc_time;
 
-        Serial.println("\nDone!");
-        Serial.println("X : " + String(gyroXoffset));
-        Serial.println("Y : " + String(gyroYoffset));
-        Serial.println("Z : " + String(gyroZoffset));
+        Serial.println("[MPU]:X : " + String(gyroXoffset));
+        Serial.println("[MPU]:Y : " + String(gyroYoffset));
+        Serial.println("[MPU]:Z : " + String(gyroZoffset));
+        Serial.println("[MPU]:陀螺仪偏移校准完成");
         preferences.putFloat("X", gyroXoffset);  // 将新的计数值写入NVS
         preferences.putFloat("Y", gyroYoffset);  // 将新的计数值写入NVS
         preferences.putFloat("Z", gyroZoffset);  // 将新的计数值写入NVS
@@ -124,10 +159,13 @@ void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delay
         digitalWrite(LED_3_GPIO, LOW);
 #endif
     } else {
-        Serial.println("[mpu]:读取到nvs数据");
-        gyroXoffset=preferences.getFloat("X", gyroXoffset);  // 将新的计数值写入NVS
-        gyroYoffset=preferences.getFloat("Y", gyroYoffset);  // 将新的计数值写入NVS
-        gyroZoffset=preferences.getFloat("Z", gyroZoffset);  // 将新的计数值写入NVS
+        Serial.println("[MPU]:读取到nvs陀螺仪校准数据");
+        gyroXoffset = preferences.getFloat("X", gyroXoffset);  // 将新的计数值写入NVS
+        gyroYoffset = preferences.getFloat("Y", gyroYoffset);  // 将新的计数值写入NVS
+        gyroZoffset = preferences.getFloat("Z", gyroZoffset);  // 将新的计数值写入NVS
+        Serial.println("[MPU]:X : " + String(gyroXoffset));
+        Serial.println("[MPU]:Y : " + String(gyroYoffset));
+        Serial.println("[MPU]:Z : " + String(gyroZoffset));
     }
 
     // 关闭Preferences
@@ -136,7 +174,7 @@ void MPU6050::calcGyroOffsets(bool console, uint16_t delayBefore, uint16_t delay
 }
 
 
-void  MPU6050::calculateAbsoluteAcceleration() {
+void MPU6050::calculateAbsoluteAcceleration() {
     // 将角度从度转换为弧度
     float angleXRad = angleX * M_PI / 180.0;
     float angleYRad = angleY * M_PI / 180.0;
@@ -165,7 +203,10 @@ void  MPU6050::calculateAbsoluteAcceleration() {
 
 
 // 主更新函数：读取传感器数据并计算角度
-void MPU6050::update() {
+bool MPU6050::update() {
+    if (!Is_Connect) {
+        return false;
+    }
     // 从寄存器0x3B开始读取14个字节（加速度+温度+陀螺仪）
     wire->beginTransmission(MPU6050_ADDR);
     wire->write(0x3B);
@@ -217,5 +258,6 @@ void MPU6050::update() {
     angleZ = angleGyroZ;
 
     preInterval = millis();  // 更新时间戳
+    return true;
 }
 

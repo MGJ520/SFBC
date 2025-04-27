@@ -84,7 +84,6 @@ void FOCMotor::useMonitoring(Print &print){
   monitor_port = &print; //operate on the address of print
   #ifndef SIMPLEFOC_DISABLE_DEBUG
   SimpleFOCDebug::enable(&print);
-  SIMPLEFOC_DEBUG("MOT: Monitor enabled!");
   #endif
 }
 
