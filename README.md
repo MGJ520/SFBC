@@ -63,4 +63,5 @@ SFBC(SimpleFocBalanceCar)是一个基于FOC（Field-Oriented Control）控制的
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=SmallPond/D-BOT&type=Date)](https://www.star-history.com/#SmallPond/D-BOT&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=MGJ520/SFBC&type=Date)](https://www.star-history.com/#MGJ520/SFBC&Date)
+
